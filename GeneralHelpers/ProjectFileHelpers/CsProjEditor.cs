@@ -35,7 +35,7 @@ public class CsProjEditor(string csprojPath)
     }
 
     // Generic method to update dependencies (NuGet or .NET version)
-    public async Task<bool> UpdateDependenciesAsync<T>(List<T> libraries) where T : IDependency
+    public async Task<bool> UpdateDependenciesAsync<T>(List<T> libraries) where T : IPackageVersionable
     {
         if (CanGetRoot() == false)
         {
