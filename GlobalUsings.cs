@@ -6,3 +6,8 @@ global using UpdateManager.CoreLibrary.GeneralHelpers.Models;
 global using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Models;
 global using Microsoft.Extensions.Configuration;
 global using UpdateManager.CoreLibrary.GeneralHelpers.Utilities;
+global using UpdateManager.CoreLibrary.GeneralHelpers.TemplateHelpers;
+global using System.Diagnostics;
+global using UpdateManager.CoreLibrary.GeneralHelpers.ProjectFileHelpers;
+global using bb1 = CommonBasicLibraries.BasicDataSettingsAndProcesses.BasicDataFunctions;
+global using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Utilities;
