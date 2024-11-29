@@ -14,3 +14,4 @@ global using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Utilities;
 global using ff1 = CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.FileFunctions.FileFunctions;
 global using jj1 = CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.JsonSerializers.FileHelpers;
 global using CommonBasicLibraries.BasicDataSettingsAndProcesses;
+global using CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.BasicExtensions;
