@@ -13,4 +13,52 @@ public static class Extensions
         }
         return value;
     }
+    // Extract the major version from version string
+    public static int GetMajorVersiont(this string version)
+    {
+        var versionParts = version.Split('.');
+        if (versionParts.Length < 1)
+        {
+            throw new CustomBasicException("Invalid version format. Major version is required.");
+        }
+        return int.Parse(versionParts[0]);
+    }
+    // Extract the minor version (the last part of the version string)
+    public static int GetMinorVersion(this string version)
+    {
+        var versionParts = version.Split('.');
+        if (versionParts.Length < 1)
+        {
+            throw new CustomBasicException("Invalid version format. Minor version is required.");
+        }
+
+        // The very last part should always be the minor version, regardless of how many parts are in the version string
+        return int.Parse(versionParts.Last());
+    }
+    // Increment the minor version and maintain the major.0.minor format
+    public static string IncrementMinorVersion(this string version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            throw new CustomBasicException("Version string is empty or null, unable to increment minor version.");
+        }
+
+        var versionParts = version.Split('.');
+        // Ensure that the version has at least 2 parts (major.minor format)
+        if (versionParts.Length < 2)
+        {
+            throw new CustomBasicException("Invalid version format. Version should have at least 'major.minor' format.");
+        }
+        // Extract major version (the first part)
+        int major = int.Parse(versionParts[0]);
+
+        // Always take the last part as the minor version, no matter how many parts are there
+        int minor = int.Parse(versionParts.Last());
+
+        // Increment minor version
+        minor++;
+
+        // Return in major.0.minor format
+        return $"{major}.0.{minor}";
+    }
 }
