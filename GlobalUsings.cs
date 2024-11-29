@@ -15,3 +15,4 @@ global using ff1 = CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.Fil
 global using jj1 = CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.JsonSerializers.FileHelpers;
 global using CommonBasicLibraries.BasicDataSettingsAndProcesses;
 global using CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.BasicExtensions;
+global using System.Text;
