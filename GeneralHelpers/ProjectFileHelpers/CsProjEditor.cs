@@ -94,10 +94,14 @@ public class CsProjEditor(string csprojPath)
                 Console.WriteLine($"Package name {packageName} was not found on nuget and was not on my custom list");
                 return false; // If there is no public version and it's not custom, we can't update
             }
-
             if (isExcluded)
             {
                 latestVersion = AdjustToZeroPatchVersion(latestVersion);
+                if (await NuGetPackageChecker.IsPackageAvailableAsync(packageName, latestVersion) == false)
+                {
+                    //this means this is not available.  just skip for now.
+                    continue;
+                }
             }
 
             // Compare and update if necessary
