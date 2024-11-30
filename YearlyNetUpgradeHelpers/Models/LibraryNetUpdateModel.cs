@@ -8,4 +8,5 @@ public class LibraryNetUpdateModel : IPackageVersionable, INugetModel
     public string NugetPackagePath { get; set; } = "";
     public BasicList<string> Dependencies { get; set; } = []; // List of library names this library depends on
     public EnumFeedType PackageType { get; set; } // Type of package: Local, Public
+    public bool Development { get; set; } //this is needed so if development, can't post to nuget.
 }

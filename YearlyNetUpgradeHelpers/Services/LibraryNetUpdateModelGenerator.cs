@@ -24,7 +24,8 @@ public class LibraryNetUpdateModelGenerator(IPackagesContext packageContext) : I
                 PackageName = package.PackageName,
                 CsProjPath = package.CsProjPath,
                 NugetPackagePath = package.NugetPackagePath,
-                Status = EnumDotNetUpgradeStatus.None
+                Status = EnumDotNetUpgradeStatus.None,
+                Development = package.Development
             };
             upgrade.Version = package.FeedType == EnumFeedType.Local
                 ? package.Version.IncrementMinorVersion()
