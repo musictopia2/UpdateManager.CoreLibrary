@@ -1,29 +1,43 @@
 ﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
-public class NoCustomProcessesHandler : ICustomProcessHandler
+public class NoCustomProcessesHandler : IPostUpgradeProcessHandler, IPreUpgradeProcessHandler
 {
-    bool ICustomProcessHandler.AreCustomProcessesNeeded()
-    {
-        return false;
-    }
-
-    Task<bool> ICustomProcessHandler.HandleCommitAsync(LibraryNetUpdateModel netUpdateModel)
-    {
-        return Task.FromResult(false); //this means i did not decide to handle later.
-    }
-
-    
-    Task ICustomProcessHandler.InitAsync()
+    Task IPostUpgradeProcessHandler.ResetFlagsForNewVersionAsync()
     {
         return Task.CompletedTask;
     }
-
-    Task ICustomProcessHandler.ResetFlagsForNewVersionAsync()
+    bool IPostUpgradeProcessHandler.ArePostUpgradeProcessesNeeded()
+    {
+        return false;  // No post-upgrade processes needed
+    }
+    Task<bool> IPostUpgradeProcessHandler.HandleCommitAsync(LibraryNetUpdateModel netUpdateModel)
+    {
+        // Return false when no post-upgrade processes are needed
+        return Task.FromResult(false);  // No custom commit handling needed.
+    }
+    Task IPostUpgradeProcessHandler.InitAsync()
     {
         return Task.CompletedTask;
     }
-
-    Task<bool> ICustomProcessHandler.RunCustomProcessesAsync()
+    Task<bool> IPostUpgradeProcessHandler.RunPostUpgradeProcessesAsync()
     {
-        throw new CustomBasicException("Should not have ran the custom processes because there was none even needed");
+        // Throw an exception if post-upgrade processes are triggered unexpectedly
+        throw new InvalidOperationException("Post-upgrade processes were called, but none are configured. This should not happen.");
+    }
+    Task IPreUpgradeProcessHandler.InitAsync()
+    {
+        return Task.CompletedTask;
+    }
+    bool IPreUpgradeProcessHandler.ArePreUpgradeProcessesNeeded()
+    {
+        return false;  // No pre-upgrade processes needed
+    }
+    Task<bool> IPreUpgradeProcessHandler.RunPreUpgradeProcessesAsync()
+    {
+        // Throw an exception if pre-upgrade processes are triggered unexpectedly
+        throw new InvalidOperationException("Pre-upgrade processes were called, but none are configured. This should not happen.");
+    }
+    Task IPreUpgradeProcessHandler.ResetFlagsForNewVersionAsync()
+    {
+        return Task.CompletedTask;  // No flags to reset for the new version
     }
 }

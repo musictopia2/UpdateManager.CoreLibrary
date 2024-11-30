@@ -8,4 +8,5 @@ public class NuGetPackageModel : IPackageVersionable, INugetModel
     public string NugetPackagePath { get; set; } = "";
     public EnumFeedType FeedType { get; set; }
     public bool TemporarilyIgnore { get; set; } //i think this should be used as well.  so i reserve the right to ignore this one.
+    public bool Development { get; set; } = false; // if this is in development, then can put in a development feed.
 }
