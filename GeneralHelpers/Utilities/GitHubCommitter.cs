@@ -125,8 +125,8 @@ public static class GitHubCommitter
         };
 
         using var process = Process.Start(processInfo) ?? throw new InvalidOperationException("Failed to start git process.");
-        string output = await process.StandardOutput.ReadToEndAsync();
-        string error = await process.StandardError.ReadToEndAsync();
+        string output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+        string error = await process.StandardError.ReadToEndAsync(cancellationToken);
 
         await process.WaitForExitAsync(cancellationToken);
 
