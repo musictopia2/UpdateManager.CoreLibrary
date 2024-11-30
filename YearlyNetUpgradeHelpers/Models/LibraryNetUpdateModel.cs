@@ -1,5 +1,5 @@
 ﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Models;
-public class LibraryNetUpdateModel : IPackageVersionable
+public class LibraryNetUpdateModel : IPackageVersionable, INugetModel
 {
     public string PackageName { get; set; } = "";
     public string Version { get; set; } = "";

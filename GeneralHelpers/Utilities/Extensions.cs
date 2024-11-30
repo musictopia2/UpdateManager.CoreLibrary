@@ -4,12 +4,23 @@ public static class Extensions
     public static string GetRequiredNuGetPackagesPath(this IConfiguration configuration)
     {
         // Check if the configuration key is found
-        var value = configuration[NuGetPackagesConfigurationKeys.NuGetPackagesKey];
+        var value = configuration[UpdateSystemConfigurationKeys.CustomPackageInfoKey];
 
         // If the key is not found, throw an exception
         if (string.IsNullOrEmpty(value))
         {
             throw new ConfigurationKeyNotFoundException("The NuGet package path key is not registered in the configuration.");
+        }
+        return value;
+    }
+    public static string GetNugetConfigPath(this IConfiguration configuration)
+    {
+        var value = configuration[UpdateSystemConfigurationKeys.PackageConfigFileKey];
+
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The NuGet config path is not registered in the configuration.");
         }
         return value;
     }

@@ -1,5 +1,5 @@
 ﻿namespace UpdateManager.CoreLibrary.GeneralHelpers.Models;
-public class NuGetPackageModel : IPackageVersionable
+public class NuGetPackageModel : IPackageVersionable, INugetModel
 {
     public string PackageName { get; set; } = "";
     public string Version { get; set; } = "";
