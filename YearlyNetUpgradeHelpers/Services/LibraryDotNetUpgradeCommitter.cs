@@ -1,4 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
+
+namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
 public class LibraryDotNetUpgradeCommitter(IPostUpgradeProcessHandler handler) : ILibraryDotNetUpgradeCommitter
 {
     async Task<bool> ILibraryDotNetUpgradeCommitter.CommitAndPushToGitHubAsync(LibraryNetUpdateModel updateModel, DotNetVersionUpgradeModel versionUpgradeModel, CancellationToken cancellationToken)

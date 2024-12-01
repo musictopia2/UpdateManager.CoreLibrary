@@ -1,4 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
+
+namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
 public class LibraryNetUpdateModelGenerator(IPackagesContext packageContext) : ILibraryNetUpdateModelGenerator
 {
     async Task<BasicList<LibraryNetUpdateModel>> ILibraryNetUpdateModelGenerator.CreateLibraryNetUpdateModelListAsync()

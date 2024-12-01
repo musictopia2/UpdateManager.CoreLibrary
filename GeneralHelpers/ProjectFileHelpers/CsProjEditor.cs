@@ -88,7 +88,7 @@ public class CsProjEditor(string csprojPath)
 
             // If package not found in the custom feed, check for the latest version on NuGet public
             bool isExcluded = ExcludedDependencies.ExcludedExceptMajor.Contains(packageName, StringComparer.OrdinalIgnoreCase);
-            string latestVersion = await NuGetPackageChecker.GetLatestVersionAsync(packageName);
+            string latestVersion = await NuGetPackageChecker.GetLatestPublicVersionAsync(packageName);
             if (string.IsNullOrEmpty(latestVersion))
             {
                 Console.WriteLine($"Package name {packageName} was not found on nuget and was not on my custom list");
@@ -97,7 +97,7 @@ public class CsProjEditor(string csprojPath)
             if (isExcluded)
             {
                 latestVersion = AdjustToZeroPatchVersion(latestVersion);
-                if (await NuGetPackageChecker.IsPackageAvailableAsync(packageName, latestVersion) == false)
+                if (await NuGetPackageChecker.IsPublicPackageAvailableAsync(packageName, latestVersion) == false)
                 {
                     //this means this is not available.  just skip for now.
                     continue;

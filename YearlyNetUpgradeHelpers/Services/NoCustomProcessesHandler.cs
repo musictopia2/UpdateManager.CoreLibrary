@@ -1,4 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
+
+namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
 public class NoCustomProcessesHandler : IPostUpgradeProcessHandler, IPreUpgradeProcessHandler
 {
     Task IPostUpgradeProcessHandler.ResetFlagsForNewVersionAsync()

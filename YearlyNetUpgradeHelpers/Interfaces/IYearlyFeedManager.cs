@@ -1,4 +1,4 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
 public interface IYearlyFeedManager
 {
     void InitializeYearlyFeeds(DotNetVersionUpgradeModel upgradeModel); // Initialize feeds for yearly updates, skip if already present

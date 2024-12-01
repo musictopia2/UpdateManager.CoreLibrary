@@ -1,4 +1,4 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
 public interface ILibraryDotNetUpgraderBuild
 {
     //if this has already been built, then can mark as complete.

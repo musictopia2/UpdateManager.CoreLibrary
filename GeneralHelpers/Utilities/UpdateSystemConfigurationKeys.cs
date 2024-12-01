@@ -8,4 +8,6 @@ public static class UpdateSystemConfigurationKeys
     public static string PackageConfigFileKey => "PackageConfigFileKey";
     // Key for configuration file path for the Private Nuget Packages
     public static string PrivatePackageKey => "PackagePackageKey";
+    public static string DevelopmentPackageKey => "DevelopmentPackageKey";
+    public static string StagingPackageKey => "StagingPackageKey";
 }

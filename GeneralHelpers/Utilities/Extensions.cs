@@ -1,6 +1,28 @@
 ﻿namespace UpdateManager.CoreLibrary.GeneralHelpers.Utilities;
 public static class Extensions
 {
+    public static string GetDevelopmentPackagePath(this IConfiguration configuration)
+    {
+        var value = configuration[UpdateSystemConfigurationKeys.DevelopmentPackageKey];
+
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The development nuget package feed path key is not registered in the configuration.");
+        }
+        return value;
+    }
+    public static string GetStagingPackagePath(this IConfiguration configuration)
+    {
+        var value = configuration[UpdateSystemConfigurationKeys.StagingPackageKey];
+
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The staging nuget package feed path key is not registered in the configuration.");
+        }
+        return value;
+    }
     public static string GetPrivatePackagePath(this IConfiguration configuration)
     {
         var value = configuration[UpdateSystemConfigurationKeys.PrivatePackageKey];
@@ -11,7 +33,6 @@ public static class Extensions
             throw new ConfigurationKeyNotFoundException("The private nuget package feed path key is not registered in the configuration.");
         }
         return value;
-
     }
     public static string GetRequiredNuGetPackagesPath(this IConfiguration configuration)
     {
@@ -84,4 +105,5 @@ public static class Extensions
         // Return in major.0.minor format
         return $"{major}.0.{minor}";
     }
+    
 }

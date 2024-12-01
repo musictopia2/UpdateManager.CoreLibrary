@@ -16,3 +16,5 @@ global using jj1 = CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.Jso
 global using CommonBasicLibraries.BasicDataSettingsAndProcesses;
 global using CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.BasicExtensions;
 global using System.Text;
+global using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
+global using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Extensions;

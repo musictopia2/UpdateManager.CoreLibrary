@@ -1,4 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
+
+namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
 public class YearlyFeedManager(INugetPacker packer) : IYearlyFeedManager
 {
     private static string TestLocalKey => "TestLocal";

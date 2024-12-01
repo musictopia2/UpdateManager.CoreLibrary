@@ -4,7 +4,7 @@ namespace UpdateManager.CoreLibrary.GeneralHelpers.NugetHelpers;
 public static class NuGetPackageChecker
 {
     private static readonly HttpClient client = new();
-    public static async Task<string> GetLatestVersionAsync(string packageName)
+    public static async Task<string> GetLatestPublicVersionAsync(string packageName)
     {
         // Construct the URL to the NuGet Registration API (for SemVer 2 packages)
         string url = $"https://api.nuget.org/v3/registration5-gz-semver2/{packageName.ToLower()}/index.json";
@@ -85,7 +85,7 @@ public static class NuGetPackageChecker
         }
         return null!;
     }
-    public static async Task<bool> IsPackageAvailableAsync(string packageName, string version)
+    public static async Task<bool> IsPublicPackageAvailableAsync(string packageName, string version)
     {
         // Construct the URL dynamically using the package name
         string url = $"https://api.nuget.org/v3/registration5-gz-semver2/{packageName.ToLower()}/index.json";
@@ -177,13 +177,13 @@ public static class NuGetPackageChecker
             return await response.Content.ReadAsStringAsync();
         }
     }
-    public static async Task WaitForPackageToBeAvailable(string packageName, string version, int maxRetries = 10, int delayInSeconds = 60)
+    public static async Task WaitForPublicPackageToBeAvailable(string packageName, string version, int maxRetries = 10, int delayInSeconds = 60)
     {
         bool packageAvailable = false;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
-            packageAvailable = await IsPackageAvailableAsync(packageName, version);
+            packageAvailable = await IsPublicPackageAvailableAsync(packageName, version);
 
             if (packageAvailable)
             {
@@ -201,4 +201,5 @@ public static class NuGetPackageChecker
             // Handle failure logic here (e.g., alert, retry, etc.)
         }
     }
+
 }

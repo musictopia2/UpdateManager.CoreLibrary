@@ -1,4 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
+
+namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
 public class TemplateNetUpdater() : ITemplateNetUpdater
 {
     async Task<bool> ITemplateNetUpdater.UpgradeTemplateAsync<T>(TemplateModel template, BasicList<T> libraries)

@@ -1,4 +1,4 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
 public interface INetVersionUpdateContext
 {
     Task<BasicList<LibraryNetUpdateModel>> GetLibrariesForUpdateAsync();

@@ -1,4 +1,4 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
 public interface IPostUpgradeProcessHandler
 {
     // Asynchronous method to initialize any necessary data or resources
