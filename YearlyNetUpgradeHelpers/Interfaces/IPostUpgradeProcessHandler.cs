@@ -2,16 +2,16 @@
 public interface IPostUpgradeProcessHandler
 {
     // Asynchronous method to initialize any necessary data or resources
-    Task InitAsync();
+    Task InitAsync(DotNetVersionUpgradeModel dotNetVersion);
 
     // Determines if any custom processes are needed
-    bool ArePostUpgradeProcessesNeeded();
+    bool ArePostUpgradeProcessesNeeded(DotNetVersionUpgradeModel dotNetVersion);
 
     // Resets any flags or state for a new version
-    Task ResetFlagsForNewVersionAsync();
+    Task ResetFlagsForNewVersionAsync(DotNetVersionUpgradeModel dotNetVersion);
 
     // Executes custom processes and returns a bool indicating success
-    Task<bool> RunPostUpgradeProcessesAsync();
+    Task<bool> RunPostUpgradeProcessesAsync(DotNetVersionUpgradeModel dotNetVersion);
 
-    Task<bool> HandleCommitAsync(LibraryNetUpdateModel netUpdateModel);
+    Task<bool> HandleCommitAsync(LibraryNetUpdateModel netUpdateModel, DotNetVersionUpgradeModel dotNetVersion);
 }
