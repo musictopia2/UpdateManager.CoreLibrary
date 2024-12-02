@@ -1,11 +1,8 @@
-﻿using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
-
-namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
 public class YearlyFeedManager(INugetPacker packer) : IYearlyFeedManager
 {
     private static string TestLocalKey => "TestLocal";
     private static string TestPublicKey => "TestPublic";
-    private static string TemporaryPublicKey => "TemporaryPublic";
     public static void ForceRemoveTestFeeds()
     {
         NuGetFeedConfiguration.RemoveFeed(TestLocalKey);
@@ -17,7 +14,6 @@ public class YearlyFeedManager(INugetPacker packer) : IYearlyFeedManager
         {
             ff1.DeleteFolder(feedPath);
         }
-        NuGetFeedConfiguration.RemoveFeed(TemporaryPublicKey);
         ff1.CreateFolder(feedPath); //go ahead and create folder (to plan for future).
     }
     void IYearlyFeedManager.ClearYearlyFeed(string feedPath)
@@ -37,9 +33,7 @@ public class YearlyFeedManager(INugetPacker packer) : IYearlyFeedManager
         }
         try
         {
-            NuGetFeedConfiguration.AddTemporaryFeed(TemporaryPublicKey, upgradeModel.ProdPrivateFeedPath);
             ForceRemoveTestFeeds(); // Make sure to clean up any test feeds
-
             // Clean up test-related folders
             if (ff1.DirectoryExists(upgradeModel.TestLocalFeedPath))
             {

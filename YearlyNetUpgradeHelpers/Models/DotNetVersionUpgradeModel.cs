@@ -6,5 +6,5 @@ public class DotNetVersionUpgradeModel
     public bool IsTestMode { get; set; }  // Determines if it's in test mode
     public string TestLocalFeedPath { get; set; } = "";  // Path to the test local feed
     public string TestPublicFeedPath { get; set; } = "";  // Path to the test public feed
-    public string ProdPrivateFeedPath { get; set; } = "";  // Path to the private production feed
+    //because i will have staging, no longer necessary to have the other temporary feed anymore
 }

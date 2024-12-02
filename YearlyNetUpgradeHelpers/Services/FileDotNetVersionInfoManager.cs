@@ -16,7 +16,8 @@ public class FileDotNetVersionInfoManager : IDotNetVersionInfoManager
         sb.AppendLine($"IsTestMode\t{config.IsTestMode}");
         sb.AppendLine($"TestLocalFeedPath\t{config.TestLocalFeedPath}");
         sb.AppendLine($"TestPublicFeedPath\t{config.TestPublicFeedPath}");
-        sb.AppendLine($"ProdPrivateFeedPath\t{config.ProdPrivateFeedPath}");
+        //no longer necessary to have a temporary feed for production because i have staging.  they will go to staging.
+        //sb.AppendLine($"ProdPrivateFeedPath\t{config.ProdPrivateFeedPath}");
         //if you want specific stuff, has to go somewhere else now.
         //sb.AppendLine($"NeedsGamePackageCommit\t{config.NeedsGamePackageCommit}");
         //sb.AppendLine($"NeedsTemplatesUpgraded\t{config.NeedsTemplatesUpgraded}");

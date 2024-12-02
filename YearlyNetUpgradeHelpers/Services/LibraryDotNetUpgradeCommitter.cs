@@ -8,7 +8,7 @@ public class LibraryDotNetUpgradeCommitter(IPostUpgradeProcessHandler handler) :
             throw new CustomBasicException("You cannot commit to github because its testing.  Run out of test mode in order to commit to github");
         }
         bool rets;
-        rets = await handler.HandleCommitAsync(updateModel);
+        rets = await handler.HandleCommitAsync(updateModel, versionUpgradeModel);
         if (rets)
         {
             return true; //because someone else is handling this later.
