@@ -1,2 +1,0 @@
-﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Models;
-public readonly record struct UpgradeProcessState(EnumUpgradePhase Start, DotNetVersionUpgradeModel NetUpgrade);
