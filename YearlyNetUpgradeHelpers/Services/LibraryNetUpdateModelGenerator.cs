@@ -1,6 +1,4 @@
-﻿using UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Interfaces;
-
-namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
+﻿namespace UpdateManager.CoreLibrary.YearlyNetUpgradeHelpers.Services;
 public class LibraryNetUpdateModelGenerator(IPackagesContext packageContext) : ILibraryNetUpdateModelGenerator
 {
     async Task<BasicList<LibraryNetUpdateModel>> ILibraryNetUpdateModelGenerator.CreateLibraryNetUpdateModelListAsync()
@@ -20,7 +18,7 @@ public class LibraryNetUpdateModelGenerator(IPackagesContext packageContext) : I
             {
                 continue; // Skip this package as it's not in the test list
             }
-            LibraryNetUpdateModel upgrade = new ()
+            LibraryNetUpdateModel upgrade = new()
             {
                 PackageType = package.FeedType,
                 PackageName = package.PackageName,
