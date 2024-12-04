@@ -124,6 +124,62 @@ public class CsProjEditor(string csprojPath)
         // Return the adjusted version as a string
         return adjustedVersion.ToString();
     }
+    public bool AddPostBuildCommand(string programDirectory, bool allowSkipBuild)
+    {
+        // Check if the root of the XML document exists
+        if (!CanGetRoot())
+        {
+            return false;
+        }
+
+        // Check if the PostBuild target already exists
+        var existingPostBuildTarget = _root!.Descendants("Target")
+            .FirstOrDefault(t => t.Attribute("Name")?.Value == "PostBuild");
+
+        // If a PostBuild target exists, return false (as it can only exist once)
+        if (existingPostBuildTarget != null)
+        {
+            Console.WriteLine("[Info] PostBuild target already exists.");
+            return false;
+        }
+
+        // Define the PostBuild target with the necessary command
+        string netVersion = bb1.Configuration!.GetNetVersion();  // Assuming this method gives the correct .NET version
+        string fullPath = Path.Combine(programDirectory, "bin", "Release", $"net{netVersion}.0");
+        string programName = ff1.FileName(programDirectory); // Assuming this gets the program's filename
+        string programPath = Path.Combine(fullPath, $"{programName}.exe");
+
+        // Ensure the program file exists
+        if (!ff1.FileExists(programPath))
+        {
+            throw new CustomBasicException($"Path to the program {programPath} not found.");
+        }
+
+        // Build the Command for the Exec element with the Release condition
+        string execCommand = $"if $(ConfigurationName) == Release {programPath} $(ProjectName) $(ProjectDir) $(ProjectFileName) $(TargetDir)";
+
+        // Add the condition for SkipPostBuild if allowSkipBuild is true
+        if (allowSkipBuild)
+        {
+            execCommand += " and '$(SkipPostBuild)' != 'true'";
+        }
+
+        // Add a new Target element with the Exec command for PostBuild
+        var postBuildTarget = new XElement("Target",
+            new XAttribute("Name", "PostBuild"),
+            new XAttribute("AfterTargets", "PostBuildEvent"),
+            new XElement("Exec",
+                new XAttribute("Command", execCommand),
+                new XAttribute("Condition", "'$(Configuration)' == 'Release' and '$(RunPostBuildAppCondition)' == 'true'")));
+
+        // Add the new PostBuild target to the root element of the .csproj
+        _root.Add(postBuildTarget);
+
+        // Mark that an update was made
+        _anyUpdate = true;
+
+        return true; // Successfully added the PostBuild command
+    }
 
     // Update the PostBuild command's .NET version (if required)
     public bool UpdatePostBuildCommand(string newNetVersion)
