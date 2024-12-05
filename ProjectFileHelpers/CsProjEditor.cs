@@ -155,22 +155,61 @@ public class CsProjEditor(string csprojPath)
             throw new CustomBasicException($"Path to the program {programPath} not found.");
         }
 
-        // Build the Command for the Exec element with the Release condition
-        string execCommand = $"if $(ConfigurationName) == Release {programPath} $(ProjectName) $(ProjectDir) $(ProjectFileName) $(TargetDir)";
-
-        // Add the condition for SkipPostBuild if allowSkipBuild is true
-        if (allowSkipBuild)
+        // Ensure the PropertyGroup element exists
+        XElement propertyGroup = _root.Descendants("PropertyGroup").FirstOrDefault()!;
+        if (propertyGroup == null)
         {
-            execCommand += " and '$(SkipPostBuild)' != 'true'";
+            propertyGroup = new XElement("PropertyGroup");
+            _root.Add(propertyGroup);  // Add a PropertyGroup if it doesn't exist
         }
 
-        // Add a new Target element with the Exec command for PostBuild
-        var postBuildTarget = new XElement("Target",
+        // Add the RunPostBuildAppCondition property if SkipPostBuild is true
+        if (allowSkipBuild)
+        {
+            // Only add this condition if it does not already exist
+            var runPostBuildCondition = propertyGroup.Descendants("RunPostBuildAppCondition").FirstOrDefault();
+            if (runPostBuildCondition == null)
+            {
+                propertyGroup.Add(new XElement("RunPostBuildAppCondition",
+                    new XAttribute("Condition", "'$(Configuration)' == 'Release'"), "true"));
+            }
+        }
+
+        // Create a function to wrap paths in quotes if they contain spaces
+        static string WrapInQuotesIfNeeded(string argument)
+        {
+            return argument.Contains(' ') ? $"\"{argument}\"" : argument;
+        }
+
+        // Build the Exec command for the PostBuild process
+        string execCommand = $"{WrapInQuotesIfNeeded(programPath)} " +
+                             $"{WrapInQuotesIfNeeded("$(ProjectName)")} " +
+                             $"{WrapInQuotesIfNeeded("$(ProjectDir)")} " +
+                             $"{WrapInQuotesIfNeeded("$(ProjectFileName)")} " +
+                             $"{WrapInQuotesIfNeeded("$(TargetDir)")}";
+
+
+        // Create the PostBuild target element
+        XElement postBuildTarget;
+
+        // For allowSkipBuild == true, we include the condition checking for the skip flag
+        if (allowSkipBuild)
+        {
+            postBuildTarget = new XElement("Target",
             new XAttribute("Name", "PostBuild"),
             new XAttribute("AfterTargets", "PostBuildEvent"),
             new XElement("Exec",
                 new XAttribute("Command", execCommand),
                 new XAttribute("Condition", "'$(Configuration)' == 'Release' and '$(RunPostBuildAppCondition)' == 'true'")));
+        }
+        else
+        {
+            postBuildTarget = new XElement("Target",
+            new XAttribute("Name", "PostBuild"),
+            new XAttribute("AfterTargets", "PostBuildEvent"),
+            new XElement("Exec",
+            new XAttribute("Command", execCommand)));
+        }
 
         // Add the new PostBuild target to the root element of the .csproj
         _root.Add(postBuildTarget);
@@ -180,6 +219,10 @@ public class CsProjEditor(string csprojPath)
 
         return true; // Successfully added the PostBuild command
     }
+
+
+
+
 
     // Update the PostBuild command's .NET version (if required)
     public bool UpdatePostBuildCommand(string newNetVersion)
