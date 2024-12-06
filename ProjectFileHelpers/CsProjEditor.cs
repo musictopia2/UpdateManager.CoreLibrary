@@ -124,6 +124,43 @@ public class CsProjEditor(string csprojPath)
         // Return the adjusted version as a string
         return adjustedVersion.ToString();
     }
+    public bool RemovePostBuildCommand()
+    {
+        // Check if the root of the XML document exists
+        if (!CanGetRoot())
+        {
+            return false;
+        }
+
+        // Find and remove the PostBuild target (if it exists)
+        var postBuildTarget = _root!.Descendants("Target")
+            .FirstOrDefault(t => t.Attribute("Name")?.Value == "PostBuild");
+
+        if (postBuildTarget != null)
+        {
+            postBuildTarget.Remove();
+            _anyUpdate = true;
+        }
+        
+
+        // Find the first PropertyGroup element
+        XElement? propertyGroup = _root.Descendants("PropertyGroup").FirstOrDefault();
+        if (propertyGroup != null)
+        {
+            // Find and remove the RunPostBuildAppCondition property inside this PropertyGroup
+            var runPostBuildCondition = propertyGroup.Descendants("RunPostBuildAppCondition").FirstOrDefault();
+            if (runPostBuildCondition != null)
+            {
+                runPostBuildCondition.Remove();
+                _anyUpdate = true;
+            }
+            
+        }
+        
+
+        // If anything was updated, return true, indicating that changes were made
+        return _anyUpdate;
+    }
     public bool AddPostBuildCommand(string programDirectory, bool allowSkipBuild)
     {
         // Check if the root of the XML document exists
