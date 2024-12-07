@@ -6,13 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  
+
   <ItemGroup>
     <PackageReference Include="CommonBasicLibraries" Version="9.0.1" />
     <PackageReference Include="NuGet.Versioning" Version="6.12.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="YearlyNetUpgradeHelpers\" />
   </ItemGroup>
 
 </Project>
