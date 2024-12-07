@@ -310,7 +310,9 @@ public class CsProjEditor(string csprojPath)
             new XAttribute("Name", "PostBuild"),
             new XAttribute("AfterTargets", "PostBuildEvent"),
             new XElement("Exec",
-            new XAttribute("Command", execCommand)));
+            new XAttribute("Command", execCommand),
+            new XAttribute("Condition", "'$(Configuration)' == 'Release'")
+            ));
         }
 
         // Add the new PostBuild target to the root element of the .csproj

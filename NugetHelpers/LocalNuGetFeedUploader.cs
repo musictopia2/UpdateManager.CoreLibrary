@@ -1,5 +1,5 @@
 ﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
-public static class PrivateNuGetFeedUploader
+public static class LocalNuGetFeedUploader
 {
     public static async Task<bool> UploadPrivateNugetPackageAsync(string feedPath, string nugetPath, string nugetFile, CancellationToken cancellationToken = default)
     {
