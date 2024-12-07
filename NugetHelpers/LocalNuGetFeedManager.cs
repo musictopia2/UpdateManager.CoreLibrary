@@ -43,6 +43,7 @@ public static class LocalNuGetFeedManager
             if (string.IsNullOrEmpty(feedPath) || string.IsNullOrEmpty(packageName))
             {
                 Console.WriteLine("Feed path and package name must be provided.");
+                Environment.Exit(1); //this is an error.
                 return false;
             }
 
@@ -52,7 +53,7 @@ public static class LocalNuGetFeedManager
             // Check if the folder exists
             if (ff1.DirectoryExists(packageFolderPath) == false)
             {
-                Console.WriteLine($"Package folder {packageFolderPath} does not exist.");
+                //if this needs to be notified, something else should do it.
                 return false;
             }
 
@@ -67,12 +68,14 @@ public static class LocalNuGetFeedManager
             catch (Exception ex)
             {
                 Console.WriteLine($"Error deleting package folder {packageFolderPath}: {ex.Message}");
+                Environment.Exit(1);
                 return false;
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error deleting package folder: {ex.Message}");
+            Environment.Exit(1);
             return false;
         }
     }
