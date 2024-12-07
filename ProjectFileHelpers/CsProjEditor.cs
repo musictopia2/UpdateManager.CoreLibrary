@@ -9,6 +9,71 @@ public class CsProjEditor(string csprojPath)
         _root = _csProjDoc.Root;
         return _root != null;
     }
+    public bool AddFeedType(EnumFeedType feedType)
+    {
+        // Check if we can get the root element of the XML
+        if (CanGetRoot() == false)
+        {
+            return false;
+        }
+
+        // Add or update FeedType inside the PropertyGroup
+        XElement? propertyGroup = _root!.Descendants("PropertyGroup").FirstOrDefault();
+        if (propertyGroup == null)
+        {
+            propertyGroup = new XElement("PropertyGroup");
+            _root.Add(propertyGroup);  // Add a PropertyGroup if it doesn't exist
+        }
+
+        // Define the FeedType value (either "Private" or "Public")
+        string feedTypeValue = feedType == EnumFeedType.Local ? "Local" : "Public";
+
+        // Look for existing FeedType element
+        var feedTypeElement = propertyGroup.Descendants("FeedType").FirstOrDefault();
+
+        if (feedTypeElement != null)
+        {
+            // If the FeedType element already exists, update its value
+            feedTypeElement.Value = feedTypeValue;
+        }
+        else
+        {
+            // If no FeedType element exists, add one
+            propertyGroup.Add(new XElement("FeedType", feedTypeValue));
+        }
+
+        // Mark that the file has been modified
+        _anyUpdate = true;
+        return true;
+    }
+    // Method to get the current FeedType (Local or Public) from the .csproj
+    public EnumFeedType? GetFeedType()
+    {
+        if (!CanGetRoot())
+        {
+            return null;
+        }
+
+        // Find the FeedType element in the .csproj file
+        var feedTypeElement = _root!.Descendants("PropertyGroup")
+                                    .Descendants("FeedType")
+                                    .FirstOrDefault();
+        if (feedTypeElement == null)
+        {
+            return null;
+        }
+
+        // Parse the FeedType value and return the corresponding Enum value
+        string feedTypeValue = feedTypeElement.Value.Trim();
+
+        // Convert the FeedType value to EnumFeedType
+        return feedTypeValue switch
+        {
+            "Local" => EnumFeedType.Local,
+            "Public" => EnumFeedType.Public,
+            _ => null // Return null if the value is invalid
+        };
+    }
 
     // Method to update .NET version
     public bool UpdateNetVersion(string newNetVersion)
