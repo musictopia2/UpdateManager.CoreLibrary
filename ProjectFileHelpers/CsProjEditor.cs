@@ -379,6 +379,23 @@ public class CsProjEditor(string csprojPath)
         }
         return false;
     }
+    public bool IsAnalzyer()
+    {
+        if (CanGetRoot() == false)
+        {
+            throw new CustomBasicException("Unable to get root");
+        }
+        var buildoutput = _root!.Descendants("IncludeBuildOutput").FirstOrDefault();
+        if (buildoutput is null)
+        {
+            return false;
+        }
+        if (buildoutput.Value == "false")
+        {
+            return true;
+        }
+        return false;
+    }
 
     // Saves the updated csproj file if any changes have been made
     public void SaveChanges()
@@ -387,5 +404,6 @@ public class CsProjEditor(string csprojPath)
         {
             _csProjDoc.Save(csprojPath);
         }
+        
     }
 }

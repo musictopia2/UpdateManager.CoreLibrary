@@ -13,3 +13,4 @@ global using CommonBasicLibraries.BasicDataSettingsAndProcesses;
 global using CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.BasicExtensions;
 global using System.Text;
 global using CommonBasicLibraries.BasicDateTimeProcesses;
+global using UpdateManager.CoreLibrary.ProjectFileHelpers;
