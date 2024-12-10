@@ -324,9 +324,26 @@ public class CsProjEditor(string csprojPath)
         return true; // Successfully added the PostBuild command
     }
 
+    public EnumTargetFramework GetTargetFramework()
+    {
+        if (CanGetRoot() == false)
+        {
+            throw new CustomBasicException("Unable to get root");
+        }
+        var targetFrameworkElement = _root!.Descendants("TargetFramework").FirstOrDefault() ??
+                                     _root.Descendants("TargetFrameworks").FirstOrDefault(); // Handle multiple target frameworks
+        if (targetFrameworkElement != null)
+        {
+            string originalValue = targetFrameworkElement.Value;
 
-
-
+            if (originalValue.Contains("netstandard2", StringComparison.CurrentCultureIgnoreCase))
+            {
+                return EnumTargetFramework.NetStandard;
+            }
+            return EnumTargetFramework.NetRuntime;
+        }
+        throw new CustomBasicException("Unable to get version");
+    }
 
     // Update the PostBuild command's .NET version (if required)
     public bool UpdatePostBuildCommand(string newNetVersion)

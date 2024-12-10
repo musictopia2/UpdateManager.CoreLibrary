@@ -36,7 +36,7 @@ public static class LocalNuGetFeedManager
     }
 
     // Delete all versions of a package from the feed by deleting the package folder
-    public static async Task<bool> DeletePackageFolderAsync(string feedPath, string packageName, CancellationToken cancellationToken = default)
+    public static async Task<bool> DeletePackageFolderAsync(string feedPath, string packageName)
     {
         try
         {

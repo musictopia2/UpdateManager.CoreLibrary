@@ -84,7 +84,6 @@ public static class NuGetFeedConfiguration
                 return true;  // Feed successfully removed
             }
         }
-        Console.WriteLine($"Error: Feed '{feedKey}' not found.");
         return false;  // Feed not found
     }
 }

@@ -12,4 +12,6 @@ public interface IPackagesContext
 
     // Adds a new package to the list.
     Task AddPackageAsync(NuGetPackageModel package);
+    //may need to save an entirely new list (like if i had to add another field).
+    Task SaveCompleteListAsync(BasicList<NuGetPackageModel> packages);
 }

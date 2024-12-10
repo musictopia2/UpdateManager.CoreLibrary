@@ -129,10 +129,8 @@ public static class NuGetPackageChecker
                             {
                                 // Get the version from the catalog entry
                                 string itemVersion = innerItem.GetProperty("catalogEntry").GetProperty("version").GetString()!;
-
                                 if (itemVersion == version)
                                 {
-                                    Console.WriteLine($"Package {packageName} version {version} is available.");
                                     return true;
                                 }
                             }
@@ -152,7 +150,6 @@ public static class NuGetPackageChecker
             }
 
             // If we couldn't find the version, return false
-            Console.WriteLine($"Package {packageName} version {version} is NOT available.");
             return false;
         }
         catch (Exception ex)

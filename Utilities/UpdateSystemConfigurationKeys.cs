@@ -10,4 +10,6 @@ public static class UpdateSystemConfigurationKeys
     public static string PrivatePackageKey => "PackagePackageKey";
     public static string DevelopmentPackageKey => "DevelopmentPackageKey";
     public static string StagingPackageKey => "StagingPackageKey";
+    public static string PrefixKey => "PrefixKey";
+    public static string PostBuildFeedProcessorKey => "PostBuildFeedProcessorKey";
 }

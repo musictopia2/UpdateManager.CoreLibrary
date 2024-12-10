@@ -21,9 +21,11 @@ public class NugetPacker : INugetPacker
                 extras = " --no-build ";  // This flag will skip the build step if specified
             }
 
-            // Construct the full command with the .csproj path and other arguments
-            string arguments = $"pack \"{project.CsProjPath}\" -c release {extras} -p:PackageVersion={project.Version}";
-
+            // Determine the correct PackageId (use PrefixForPackageName + PackageName if PrefixForPackageName is provided)
+            string packageId = project.GetPackageID();
+            
+            // Construct the full command with the .csproj path, other arguments, and the custom PackageId if provided
+            string arguments = $"pack \"{project.CsProjPath}\" -c release {extras} -p:PackageVersion={project.Version} -p:PackageId={packageId}";
             var startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",

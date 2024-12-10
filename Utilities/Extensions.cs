@@ -1,6 +1,36 @@
 ﻿namespace UpdateManager.CoreLibrary.Utilities;
 public static class Extensions
 {
+    public static string GetPackageID(this IPackageVersionable package)
+    {
+        if (string.IsNullOrWhiteSpace(package.PrefixForPackageName))
+        {
+            return package.PackageName;
+        }
+        return $"{package.PrefixForPackageName}.{package.PackageName}";
+    }
+    public static string GetFeedPostProcessorProgramFromConfig(this IConfiguration configuration)
+    {
+        var value = configuration[UpdateSystemConfigurationKeys.PostBuildFeedProcessorKey];
+
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The post program is not registered in the configuration.");
+        }
+        return value;
+    }
+    public static string GetPackagePrefixFromConfig(this IConfiguration configuration)
+    {
+        var value = configuration[UpdateSystemConfigurationKeys.PrefixKey];
+
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The package prefix key is not registered in the configuration.");
+        }
+        return value;
+    }
     public static string GetDevelopmentPackagePath(this IConfiguration configuration)
     {
         var value = configuration[UpdateSystemConfigurationKeys.DevelopmentPackageKey];

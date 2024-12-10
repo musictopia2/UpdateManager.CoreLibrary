@@ -18,7 +18,10 @@ public class FilePackagesContext : IPackagesContext
         _list = await jj1.RetrieveSavedObjectAsync<BasicList<NuGetPackageModel>>(_packagePath);
         return _list;
     }
-
+    async Task IPackagesContext.SaveCompleteListAsync(BasicList<NuGetPackageModel> packages)
+    {
+        await jj1.SaveObjectAsync(_packagePath, packages);
+    }
     async Task IPackagesContext.UpdatePackageAsync(NuGetPackageModel updatedPackage)
     {
         var package = _list.SingleOrDefault(x => x.PackageName == updatedPackage.PackageName)
