@@ -9,4 +9,5 @@ public interface IUploadedPackagesStorage
     Task UpdateUploadedPackageAsync(UploadedPackageModel package);
     // Adds a new uploaded package to the storage system.
     Task AddUploadedPackageAsync(UploadedPackageModel package);
+    Task SaveUpdatedUploadedListAsync(BasicList<UploadedPackageModel> list);
 }

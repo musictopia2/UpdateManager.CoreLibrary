@@ -64,4 +64,9 @@ public class FileUploadedPackagesStorage : IUploadedPackagesStorage
         found.Version = package.Version;
         await SaveAsync();
     }
+    async Task IUploadedPackagesStorage.SaveUpdatedUploadedListAsync(BasicList<UploadedPackageModel> list)
+    {
+        _list = list; //in this case, could use this list for future.
+        await SaveAsync();
+    }
 }
