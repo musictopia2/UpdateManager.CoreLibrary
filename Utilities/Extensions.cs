@@ -9,6 +9,19 @@ public static class Extensions
         }
         return $"{package.PrefixForPackageName}.{package.PackageName}";
     }
+    public static string GetUploadedPackagesStoragePathFromConfig(this IConfiguration configuration)
+    {
+        // Retrieve the storage path for uploaded packages from the configuration
+        var value = configuration[UpdateSystemConfigurationKeys.UploadedPackagesStoragePathKey];
+
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The uploaded packages storage path is not registered in the configuration.");
+        }
+
+        return value;
+    }
     public static string GetFeedPostProcessorProgramFromConfig(this IConfiguration configuration)
     {
         var value = configuration[UpdateSystemConfigurationKeys.PostBuildFeedProcessorKey];

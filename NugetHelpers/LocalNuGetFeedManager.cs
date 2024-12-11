@@ -1,4 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
+﻿using System.Runtime.CompilerServices;
+
+namespace UpdateManager.CoreLibrary.NugetHelpers;
 public static class LocalNuGetFeedManager
 {
     // Check if the package exists in the feed
@@ -181,5 +183,14 @@ public static class LocalNuGetFeedManager
             Console.WriteLine($"Error getting latest package version: {ex.Message}");
             return null;
         }
+    }
+    public static string GetNugetFile(string feedUrl, string packageId, string version)
+    {
+        string path = Path.Combine(feedUrl, packageId, version, $"{packageId}.{version}.nupkg");
+        if (ff1.FileExists(path) == false)
+        {
+            throw new CustomBasicException($"The path {path} was incorrect for getting nuget file.  Rethink");
+        }
+        return path;
     }
 }
