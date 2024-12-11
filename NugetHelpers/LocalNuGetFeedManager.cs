@@ -109,10 +109,18 @@ public static class LocalNuGetFeedManager
 
             if (process.ExitCode == 0)
             {
-                // Parse the output to extract just the package names (ignore versions)
-                var packageList = (await outputTask).Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+                // Get the output from the nuget command
+                var output = await outputTask;
 
-                // Extract the package names (the first part before the version number)
+                // If the output contains "No packages found", return an empty list
+                if (output.Contains("No packages found", StringComparison.OrdinalIgnoreCase))
+                {
+                    return []; // Return an empty list
+                }
+
+                // Otherwise, parse the output to extract just the package names (ignore versions)
+                var packageList = output.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+
                 var packageNames = packageList
                     .Select(pkg => pkg.Trim().Split(' ')[0])  // Take only the first part (package name)
                     .Distinct()                               // Remove duplicates, in case a package has multiple versions
@@ -123,15 +131,16 @@ public static class LocalNuGetFeedManager
             else
             {
                 Console.WriteLine($"Error fetching package names: {await errorTask}");
-                return [];
+                return []; // Return an empty list on error
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error getting all package names: {ex.Message}");
-            return [];
+            return []; // Return an empty list on exception
         }
     }
+
     // Get the latest version of a package in the feed
     public static async Task<string?> GetLatestPackageVersionAsync(string feedUrl, string packageId, CancellationToken cancellationToken = default)
     {

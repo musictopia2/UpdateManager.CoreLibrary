@@ -41,10 +41,10 @@ public class FileUploadedPackagesStorage : IUploadedPackagesStorage
             if (ff1.FileExists(_uploadedPath) == false)
             {
                 _list.Clear();
-                return _list;
+                return _list.ToBasicList();
             }
             _list = await jj1.RetrieveSavedObjectAsync<BasicList<UploadedPackageModel>>(_uploadedPath);
-            return _list;
+            return _list.ToBasicList();
         }
         catch (Exception ex)
         {
