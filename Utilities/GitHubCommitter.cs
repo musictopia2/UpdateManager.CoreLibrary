@@ -105,7 +105,7 @@ public static class GitHubCommitter
     // Helper function to check if there are uncommitted changes
     public static async Task<bool> HasUncommittedChangesAsync(string directoryPath, CancellationToken cancellationToken = default)
     {
-        var (_, Output, _) = await RunGitCommandAsync(directoryPath, "git status --porcelain", cancellationToken);
+        var (_, Output, _) = await RunGitCommandAsync(directoryPath, "status --porcelain", cancellationToken);
 
         // If the output is empty, there are no changes
         return !string.IsNullOrEmpty(Output);
