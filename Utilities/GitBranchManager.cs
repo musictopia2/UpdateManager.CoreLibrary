@@ -14,11 +14,11 @@ public static class GitBranchManager
         }
 
         // Check if 'main' or 'master' exists in the remote branches
-        if (output.Contains("origin/main"))
+        if (output.Contains("origin/main", StringComparison.CurrentCultureIgnoreCase))
         {
             return "main";
         }
-        else if (output.Contains("origin/master"))
+        else if (output.Contains("origin/master", StringComparison.CurrentCultureIgnoreCase))
         {
             return "master";
         }
