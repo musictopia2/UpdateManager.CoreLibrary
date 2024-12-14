@@ -10,7 +10,7 @@ public static class GitBranchManager
         if (!isSuccess)
         {
             Console.WriteLine($"Error getting branches: {errorMessage}");
-            return string.Empty;
+            return "";
         }
 
         // Check if 'main' or 'master' exists in the remote branches
@@ -23,8 +23,8 @@ public static class GitBranchManager
             return "master";
         }
 
-        Console.WriteLine("Neither 'main' nor 'master' branches found.");
-        return string.Empty;
+        Console.WriteLine($"Neither 'main' nor 'master' branches found. What was found was {output}");
+        return "";
     }
 
 
@@ -48,6 +48,10 @@ public static class GitBranchManager
                 return true; //go ahead and return true because you don't even have a repository so no problem.
             }
             string targetBranch = await GetDefaultBranchAsync(repoDirectory, cancellationToken);
+            if (targetBranch == "")
+            {
+                return false;
+            }
             // Check the current branch
             var currentBranch = await GetCurrentBranchAsync(repoDirectory, cancellationToken);
             if (currentBranch != targetBranch)
