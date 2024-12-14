@@ -98,7 +98,10 @@ public static class NuGetPackageChecker
             // Check if the response is successful
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error: Failed to query NuGet. Status Code: {response.StatusCode}");
+                if (response.StatusCode != System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Error: Failed to query NuGet. Status Code: {response.StatusCode}");
+                }
                 return false;
             }
 
