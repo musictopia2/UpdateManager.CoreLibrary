@@ -16,17 +16,24 @@ public static class GitBranchManager
         {
             _isBranchSwitchInProgress = true;
 
-            // Ensure no uncommitted changes before switching branches
-            if (await HasUncommittedChangesAsync(repoDirectory, cancellationToken))
+            if (IsGitRepository(repoDirectory) == false)
             {
-                Console.WriteLine("There are uncommitted changes. Please commit or stash your changes before switching branches.");
-                return false;
+                return true; //go ahead and return true because you don't even have a repository so no problem.
             }
 
             // Check the current branch
             var currentBranch = await GetCurrentBranchAsync(repoDirectory, cancellationToken);
             if (currentBranch != targetBranch)
             {
+
+                // Ensure no uncommitted changes before switching branches if you are not on the proper branch.
+                if (await HasUncommittedChangesAsync(repoDirectory, cancellationToken))
+                {
+                    Console.WriteLine("There are uncommitted changes. Please commit or stash your changes before switching branches.");
+                    return false;
+                }
+
+
                 //Console.WriteLine($"Switching from branch {currentBranch} to {targetBranch}...");
                 var (IsSuccess, Output, ErrorMessage) = await RunGitCommandAsync(repoDirectory, $"checkout {targetBranch}", cancellationToken);
 
