@@ -18,6 +18,10 @@ public static class GitHubCommitter
                 return false;
             }
             string projectDir = Path.GetDirectoryName(csprojFilePath)!;
+            if (IsGitRepository(projectDir) == false)
+            {
+                return true; //there is no repository so its okay.
+            }
             return await PrivateCommitAsync(projectDir, commitMessage, cancellationToken);
         }
         catch (Exception ex)

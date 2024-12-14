@@ -1,10 +1,37 @@
 ﻿namespace UpdateManager.CoreLibrary.Utilities;
 public static class GitBranchManager
 {
+
+    private static async Task<string> GetDefaultBranchAsync(string repoDirectory, CancellationToken cancellationToken = default)
+    {
+        // Run the command to get a list of branches, with the default branch marked
+        var (isSuccess, output, errorMessage) = await RunGitCommandAsync(repoDirectory, "branch -r", cancellationToken);
+
+        if (!isSuccess)
+        {
+            Console.WriteLine($"Error getting branches: {errorMessage}");
+            return string.Empty;
+        }
+
+        // Check if 'main' or 'master' exists in the remote branches
+        if (output.Contains("origin/main"))
+        {
+            return "main";
+        }
+        else if (output.Contains("origin/master"))
+        {
+            return "master";
+        }
+
+        Console.WriteLine("Neither 'main' nor 'master' branches found.");
+        return string.Empty;
+    }
+
+
     private static bool _isBranchSwitchInProgress = false;
 
     // Switches to the specified branch before performing updates
-    public static async Task<bool> SwitchBranchAsync(string targetBranch, string repoDirectory, CancellationToken cancellationToken = default)
+    public static async Task<bool> SwitchBranchToDefaultAsync(string repoDirectory, CancellationToken cancellationToken = default)
     {
         if (_isBranchSwitchInProgress)
         {
@@ -20,7 +47,7 @@ public static class GitBranchManager
             {
                 return true; //go ahead and return true because you don't even have a repository so no problem.
             }
-
+            string targetBranch = await GetDefaultBranchAsync(repoDirectory, cancellationToken);
             // Check the current branch
             var currentBranch = await GetCurrentBranchAsync(repoDirectory, cancellationToken);
             if (currentBranch != targetBranch)
@@ -121,7 +148,7 @@ public static class GitBranchManager
         return (isSuccess, output, error);
     }
     // Helper function to check if the directory is a Git repository
-    public static bool IsGitRepository(string directory)
+    private static bool IsGitRepository(string directory)
     {
         if (Directory.Exists(Path.Combine(directory, ".git")))
         {
