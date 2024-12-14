@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommonBasicLibraries" Version="9.0.7" />
-    <PackageReference Include="NuGet.Versioning" Version="6.12.1" />
+    
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="C:\VS\OneNet\Apps\CommandLines\PostBuildPackageHandler\bin\Release\net9.0\PostBuildPackageHandler.exe $(ProjectName) $(ProjectDir) $(ProjectFileName) $(TargetDir)" Condition="'$(Configuration)' == 'Release' and '$(RunPostBuildAppCondition)' == 'true'" />

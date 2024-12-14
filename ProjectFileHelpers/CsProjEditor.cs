@@ -181,13 +181,14 @@ public class CsProjEditor(string csprojPath)
     }
     private static string AdjustToZeroPatchVersion(string latestVersion)
     {
-        var latestVer = NuGet.Versioning.NuGetVersion.Parse(latestVersion);
-
-        // Force the version to end in 0.0 for excluded packages
-        var adjustedVersion = new NuGet.Versioning.NuGetVersion(latestVer.Major, latestVer.Minor, 0);
-
-        // Return the adjusted version as a string
-        return adjustedVersion.ToString();
+        var versionParts = latestVersion.Split('.');
+        // If the version has at least 3 parts, we modify the patch part to 0
+        if (versionParts.Length >= 3)
+        {
+            versionParts[2] = "0"; // Set the patch version to 0
+        }
+        // Rebuild the version string by joining the first two parts (major.minor) and the patch part (0)
+        return string.Join(".", versionParts.Take(3));
     }
     public bool RemovePostBuildCommand()
     {
@@ -206,7 +207,7 @@ public class CsProjEditor(string csprojPath)
             postBuildTarget.Remove();
             _anyUpdate = true;
         }
-        
+
 
         // Find the first PropertyGroup element
         XElement? propertyGroup = _root.Descendants("PropertyGroup").FirstOrDefault();
@@ -219,9 +220,9 @@ public class CsProjEditor(string csprojPath)
                 runPostBuildCondition.Remove();
                 _anyUpdate = true;
             }
-            
+
         }
-        
+
 
         // If anything was updated, return true, indicating that changes were made
         return _anyUpdate;
@@ -404,6 +405,6 @@ public class CsProjEditor(string csprojPath)
         {
             _csProjDoc.Save(csprojPath);
         }
-        
+
     }
 }
