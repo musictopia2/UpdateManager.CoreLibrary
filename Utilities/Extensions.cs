@@ -1,6 +1,11 @@
 ﻿namespace UpdateManager.CoreLibrary.Utilities;
 public static class Extensions
 {
+    public static string GetRepositoryDirectory(this INugetModel model)
+    {
+        string output = Path.GetDirectoryName(model.CsProjPath)!;
+        return output;
+    }
     public static string GetPackageID(this IPackageVersionable package)
     {
         if (string.IsNullOrWhiteSpace(package.PrefixForPackageName))

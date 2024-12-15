@@ -1,7 +1,17 @@
 ﻿namespace UpdateManager.CoreLibrary.Utilities;
 public static class GitBranchManager
 {
-
+    public static async Task<bool> IsOnDefaultBranchAsync(string repoDirectory, CancellationToken cancellationToken = default)
+    {
+        //i think you need to make sure you already have the directory first.
+        if (IsGitRepository(repoDirectory) == false)
+        {
+            return true; //if you are not even on github, then does not matter.
+        }
+        string nameToCheck = await GetDefaultBranchAsync(repoDirectory, cancellationToken);
+        string nameOn = await GetCurrentBranchAsync(repoDirectory, cancellationToken);
+        return nameOn.Equals(nameToCheck, StringComparison.CurrentCultureIgnoreCase);
+    }
     private static async Task<string> GetDefaultBranchAsync(string repoDirectory, CancellationToken cancellationToken = default)
     {
         // Run the command to get a list of branches, with the default branch marked
