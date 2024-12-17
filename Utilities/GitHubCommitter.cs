@@ -56,7 +56,6 @@ public static class GitHubCommitter
 
             if (!uncommittedChanges)
             {
-                Console.WriteLine("No changes to commit.");
                 return true; // Nothing to commit, so return true
             }
 
