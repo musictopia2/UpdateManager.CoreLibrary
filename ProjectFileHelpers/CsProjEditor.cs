@@ -324,7 +324,33 @@ public class CsProjEditor(string csprojPath)
 
         return true; // Successfully added the PostBuild command
     }
+    public string VersionUsed()
+    {
+        if (CanGetRoot() == false)
+        {
+            throw new CustomBasicException("Unable to get root");
+        }
+        var targetFrameworkElement = _root!.Descendants("TargetFramework").FirstOrDefault() ??
+                                     _root.Descendants("TargetFrameworks").FirstOrDefault(); // Handle multiple target frameworks
+        if (targetFrameworkElement != null)
+        {
+            string originalValue = targetFrameworkElement.Value;
 
+            return ExtractMajorVersion(originalValue);
+        }
+        throw new CustomBasicException("Unable to get version");
+    }
+    private static string ExtractMajorVersion(string targetFramework)
+    {
+        var prefix = "net";
+        if (targetFramework.StartsWith(prefix))
+        {
+            var versionString = targetFramework.Substring(prefix.Length);  // e.g., "8.0"
+            var majorVersionString = versionString.Split('.')[0];  // Get the part before the dot
+            return majorVersionString;
+        }
+        throw new CustomBasicException("Invalid target framework format.");
+    }
     public EnumTargetFramework GetTargetFramework()
     {
         if (CanGetRoot() == false)
