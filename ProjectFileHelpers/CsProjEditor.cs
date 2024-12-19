@@ -75,29 +75,53 @@ public class CsProjEditor(string csprojPath)
         };
     }
 
-    // Method to update .NET version
     public bool UpdateNetVersion(string newNetVersion)
     {
         if (CanGetRoot() == false)
         {
             return false;
         }
-        var targetFrameworkElement = _root!.Descendants("TargetFramework").FirstOrDefault() ??
-                                     _root.Descendants("TargetFrameworks").FirstOrDefault(); // Handle multiple target frameworks
-        if (targetFrameworkElement != null)
+        //net9.0-windows
+        // Check if the application is a Windows app by looking for OutputType=WinExe
+        var outputTypeElement = _root!.Descendants("OutputType").FirstOrDefault();
+        if (outputTypeElement != null && outputTypeElement.Value.Equals("WinExe", StringComparison.OrdinalIgnoreCase))
         {
-            string originalValue = targetFrameworkElement.Value;
-            string newValue = $"net{newNetVersion}.0";
-            // Update the version if it is different
-            if (!originalValue.Equals(newValue, StringComparison.OrdinalIgnoreCase))
+            // If it's a Windows app (WinExe), update the version in the format: Windows[version]net
+            var targetFrameworkElement = _root.Descendants("TargetFramework").FirstOrDefault();
+            if (targetFrameworkElement != null)
             {
-                targetFrameworkElement.Value = newValue;
-                _anyUpdate = true;
+                string originalValue = targetFrameworkElement.Value;
+                string newValue = $"net{newNetVersion}.0-windows";  // For Windows apps, use the new format
+                                                                   // Update the version if it is different
+                if (!originalValue.Equals(newValue, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetFrameworkElement.Value = newValue;
+                    _anyUpdate = true;
+                }
+                return true;
             }
-            return true;
+        }
+        else
+        {
+            // Otherwise, update the version normally
+            var targetFrameworkElement = _root!.Descendants("TargetFramework").FirstOrDefault() ??
+                                         _root.Descendants("TargetFrameworks").FirstOrDefault(); // Handle multiple target frameworks
+            if (targetFrameworkElement != null)
+            {
+                string originalValue = targetFrameworkElement.Value;
+                string newValue = $"net{newNetVersion}.0";
+                // Update the version if it is different
+                if (!originalValue.Equals(newValue, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetFrameworkElement.Value = newValue;
+                    _anyUpdate = true;
+                }
+                return true;
+            }
         }
         return false;
     }
+
 
     // Generic method to update dependencies (NuGet or .NET version)
     public async Task<bool> UpdateDependenciesAsync<T>(BasicList<T> libraries) where T : IPackageVersionable
