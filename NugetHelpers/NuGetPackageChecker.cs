@@ -94,55 +94,59 @@ public static class NuGetPackageChecker
         {
             // Send an HTTP GET request to the NuGet Registration API
             HttpResponseMessage response = await client.GetAsync(url);
-
             // Check if the response is successful
             if (!response.IsSuccessStatusCode)
             {
-                if (response.StatusCode != System.Net.HttpStatusCode.NotFound)
-                {
-                    Console.WriteLine($"Error: Failed to query NuGet. Status Code: {response.StatusCode}");
-                }
+                Console.WriteLine($"Error: Failed to query NuGet. Status Code: {response.StatusCode}");
                 return false;
             }
 
             // Check if the response is GZipped (compressed)
             bool isGzip = response.Content.Headers.ContentEncoding.Contains("gzip");
 
+            // Read and decompress the response content if necessary
             string responseContent = await ReadResponseContentAsync(response, isGzip);
-
-            // Log the full response to debug what's happening
-            //Console.WriteLine("Response Content (after decompression, if needed): ");
-            //Console.WriteLine(responseContent);  // Log the response content for debugging
-
             // Parse the JSON response using System.Text.Json
             try
             {
                 using JsonDocument doc = JsonDocument.Parse(responseContent);
-                // Navigate to the "items" array in the JSON response
+
+                // Navigate to the "items" array (same parsing as in GetLatestPublicVersionAsync)
                 if (doc.RootElement.TryGetProperty("items", out JsonElement items))
                 {
-                    // Iterate through the "items" array
+                    JsonElement latestItem = default;
+                    // Get the last item from the "items" array manually (same as GetLatestPublicVersionAsync)
                     foreach (var item in items.EnumerateArray())
                     {
-                        // For each item, get the "items" array inside the current item
-                        if (item.TryGetProperty("items", out JsonElement innerItems))
+                        latestItem = item;
+                    }
+
+                    // If we have a valid latest item, extract the "upper" version
+                    if (latestItem.ValueKind == JsonValueKind.Object)
+                    {
+                        if (latestItem.TryGetProperty("upper", out JsonElement upperVersion))
                         {
-                            // Loop through the inner items to check for the version
-                            foreach (var innerItem in innerItems.EnumerateArray())
+                            string latestVersion = upperVersion.GetString()!;
+                            // Log the found version to debug
+
+                            // Now compare the latest version with the requested version
+                            if (string.Equals(latestVersion.Trim(), version.Trim(), StringComparison.OrdinalIgnoreCase))
                             {
-                                // Get the version from the catalog entry
-                                string itemVersion = innerItem.GetProperty("catalogEntry").GetProperty("version").GetString()!;
-                                if (itemVersion == version)
-                                {
-                                    return true;
-                                }
+                                return true;
                             }
+                            else
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            return false;
                         }
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Error: 'items' property not found in the response.");
                     return false;
                 }
             }
@@ -151,16 +155,13 @@ public static class NuGetPackageChecker
                 Console.WriteLine($"Error parsing JSON response: {parseEx.Message}");
                 return false;
             }
-
-            // If we couldn't find the version, return false
-            return false;
         }
         catch (Exception ex)
         {
-            // Handle any exceptions (e.g., network issues, JSON parsing errors)
             Console.WriteLine($"Error checking package version availability: {ex.Message}");
             return false;
         }
+        return false;
     }
     private static async Task<string> ReadResponseContentAsync(HttpResponseMessage response, bool isGzip)
     {
