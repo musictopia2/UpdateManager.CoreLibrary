@@ -130,80 +130,87 @@ public class CsProjEditor(string csprojPath)
         {
             return false;
         }
-        // Update <PackageReference> elements
-        var packageReferences = _root!.Descendants("PackageReference").ToList();
-        // Loop through each package in the dependencies
-        foreach (var packageReference in packageReferences)
+
+        bool anyUpdate = false;
+
+        // Find all ItemGroup elements
+        var itemGroups = _root!.Descendants("ItemGroup").ToList();
+
+        // Loop through each ItemGroup to find and update the PackageReference elements
+        foreach (var itemGroup in itemGroups)
         {
-            string packageName = packageReference.Attribute("Include")?.Value!;
-            string currentVersion = packageReference.Attribute("Version")?.Value!;
-            if (string.IsNullOrEmpty(currentVersion))
+            // Check if this ItemGroup has a Condition attribute
+            var conditionAttribute = itemGroup.Attribute("Condition");
+            bool isDebugConfiguration = conditionAttribute != null && conditionAttribute.Value.Contains("Debug");
+            bool isReleaseConfiguration = conditionAttribute != null && conditionAttribute.Value.Contains("Release");
+
+            // Loop through each PackageReference in the ItemGroup
+            var packageReferences = itemGroup.Descendants("PackageReference").ToList();
+            foreach (var packageReference in packageReferences)
             {
-                Console.WriteLine($"[Warning] Package {packageName} does not have a version specified. Skipping.");
-                return false; //i think that all dependencies need a version.
-            }
+                string packageName = packageReference.Attribute("Include")?.Value!;
+                string currentVersion = packageReference.Attribute("Version")?.Value!;
 
-            //try this part.
-
-            //if (string.IsNullOrEmpty(packageName) || string.IsNullOrEmpty(currentVersion))
-            //{
-            //    continue;
-            //}
-
-            // Skip if PrivateAssets="all"
-            if (ExcludedDependencies.ExcludedPackagesAll.Contains(packageName, StringComparer.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-            //has to now try to load in private assets.  because otherwise, some web assembly apps can't be updated otherwise.
-            //if (packageReference.Attribute("PrivateAssets")?.Value == "all")
-            //{
-            //    continue;
-            //}
-
-            // Lookup for the custom version from the provided libraries list
-            var customLibrary = libraries.FirstOrDefault(lib => string.Equals(lib.PackageName, packageName, StringComparison.OrdinalIgnoreCase));
-            if (customLibrary != null)
-            {
-                // If custom version exists in the LibraryConfig list, use it
-                //Console.WriteLine($"Using custom version {customLibrary.PackageVersion} for {packageName}");
-                if (customLibrary.Version == "")
+                if (string.IsNullOrEmpty(currentVersion))
                 {
-                    return false; //because the package version is not supposed to be blank.
+                    return false; // Every dependency must have a version
                 }
-                packageReference.SetAttributeValue("Version", customLibrary.Version);
-                _anyUpdate = true;
-                continue; // Skip the public version check for custom packages
-            }
 
-            // If package not found in the custom feed, check for the latest version on NuGet public
-            bool isExcluded = ExcludedDependencies.ExcludedExceptMajor.Contains(packageName, StringComparer.OrdinalIgnoreCase);
-            string latestVersion = await NuGetPackageChecker.GetLatestPublicVersionAsync(packageName);
-            if (string.IsNullOrEmpty(latestVersion))
-            {
-                Console.WriteLine($"Package name {packageName} was not found on nuget and was not on my custom list");
-                return false; // If there is no public version and it's not custom, we can't update
-            }
-            if (isExcluded)
-            {
-                latestVersion = AdjustToZeroPatchVersion(latestVersion);
-                if (await NuGetPackageChecker.IsPublicPackageAvailableAsync(packageName, latestVersion) == false)
+                // Skip if PrivateAssets="all"
+                //can't skip privateassets since there is something in webassembly that needs it.
+
+                //if (ExcludedDependencies.ExcludedPackagesAll.Contains(packageName, StringComparer.OrdinalIgnoreCase))
+                //{
+                //    continue;
+                //}
+
+                // Lookup for the custom version from the provided libraries list
+                var customLibrary = libraries.FirstOrDefault(lib => string.Equals(lib.PackageName, packageName, StringComparison.OrdinalIgnoreCase));
+                if (customLibrary != null)
                 {
-                    //this means this is not available.  just skip for now.
-                    continue;
-                }
-            }
+                    // If a custom version exists, update it
+                    if (string.IsNullOrEmpty(customLibrary.Version))
+                    {
+                        return false; // Package version cannot be blank
+                    }
 
-            // Compare and update if necessary
-            if (string.Compare(currentVersion, latestVersion) < 0)
-            {
-                //Console.WriteLine($"Updating {packageName} from {currentVersion} to {latestVersion}");
-                packageReference.SetAttributeValue("Version", latestVersion);
-                _anyUpdate = true;
+                    packageReference.SetAttributeValue("Version", customLibrary.Version);
+                    _anyUpdate = true;
+                    continue; // Skip the public version check for custom packages
+                }
+
+                // If not found in the custom list, check for the latest version on NuGet public
+                bool isExcluded = ExcludedDependencies.ExcludedExceptMajor.Contains(packageName, StringComparer.OrdinalIgnoreCase);
+                string latestVersion = await NuGetPackageChecker.GetLatestPublicVersionAsync(packageName);
+                if (string.IsNullOrEmpty(latestVersion))
+                {
+                    Console.WriteLine($"Package {packageName} not found on NuGet and not on the custom list.");
+                    return false; // Can't update if not found in NuGet or the custom list
+                }
+
+                if (isExcluded)
+                {
+                    // Adjust version to zero patch if excluded except for major
+                    latestVersion = AdjustToZeroPatchVersion(latestVersion);
+                    if (await NuGetPackageChecker.IsPublicPackageAvailableAsync(packageName, latestVersion) == false)
+                    {
+                        continue; // Skip if the adjusted version is unavailable
+                    }
+                }
+
+                // Compare and update the version if necessary
+                if (string.Compare(currentVersion, latestVersion) < 0)
+                {
+                    packageReference.SetAttributeValue("Version", latestVersion);
+                    _anyUpdate = true;
+                }
             }
         }
-        return true;
+
+        // If any updates were made, mark the change
+        return anyUpdate;
     }
+
     private static string AdjustToZeroPatchVersion(string latestVersion)
     {
         var versionParts = latestVersion.Split('.');
@@ -448,6 +455,128 @@ public class CsProjEditor(string csprojPath)
         }
         return false;
     }
+    public bool AddProjectReferencesBasedOnConfig(BasicList<PackagePathModel> packages)
+    {
+        if (!CanGetRoot())
+        {
+            Console.WriteLine("Failed to get root element. Returning false.");
+            return false;
+        }
+
+        bool anyUpdate = false;
+
+        // Iterate through the packages and update the ItemGroup references
+        foreach (var package in packages)
+        {
+            // Retrieve the correct version for the package
+            string packageVersion = GetPackageVersion(package.PackageName);
+
+            if (string.IsNullOrEmpty(packageVersion))
+            {
+                throw new CustomBasicException("No Version found for package: " + package.PackageName);
+            }
+
+            // Find all ItemGroups
+            var allItemGroups = _root!.Descendants("ItemGroup").ToList();
+
+            foreach (var itemGroup in allItemGroups)
+            {
+                // If the ItemGroup has no Condition attribute, check for PackageReference and remove it
+                if (itemGroup.Attribute("Condition") == null)
+                {
+                    // Find the PackageReference within this ItemGroup
+                    var existingPackageReference = itemGroup.Descendants("PackageReference")
+                        .FirstOrDefault(p => p.Attribute("Include")?.Value == package.PackageName);
+                    if (existingPackageReference != null)
+                    {
+                        // Remove the PackageReference if found
+                        existingPackageReference.Remove();
+                        anyUpdate = true;  // Mark as updated since the reference is removed
+                    }
+                }
+            }
+
+            // Create a new PackageReference for Release mode
+            XElement newPackageReference = new XElement("PackageReference",
+                new XAttribute("Include", package.PackageName),
+                new XAttribute("Version", packageVersion) // Ensure this returns the correct version
+            );
+
+            // Handle Debug mode (add ProjectReference)
+            var debugItemGroup = _root.Descendants("ItemGroup")
+                .FirstOrDefault(p => p.Attribute("Condition")?.Value == "'$(Configuration)' == 'Debug'");
+
+            // If ItemGroup for Debug doesn't exist, create it
+            if (debugItemGroup == null)
+            {
+                debugItemGroup = new XElement("ItemGroup",
+                    new XAttribute("Condition", "'$(Configuration)' == 'Debug'"));
+                _root.Add(debugItemGroup);
+                anyUpdate = true;
+            }
+
+            // Add the ProjectReference for Debug mode
+            var existingProjectReference = debugItemGroup.Descendants("ProjectReference")
+                .FirstOrDefault(pr => pr.Attribute("Include")?.Value == package.PathToProject);
+
+            if (existingProjectReference == null)
+            {
+                XElement projectReference = new XElement("ProjectReference",
+                    new XAttribute("Include", package.PathToProject)
+                );
+                debugItemGroup.Add(projectReference);
+                anyUpdate = true;
+            }
+
+            // Handle Release mode (add PackageReference)
+            var releaseItemGroup = _root.Descendants("ItemGroup")
+                .FirstOrDefault(p => p.Attribute("Condition")?.Value == "'$(Configuration)' == 'Release'");
+
+            // If ItemGroup for Release doesn't exist, create it
+            if (releaseItemGroup == null)
+            {
+                releaseItemGroup = new XElement("ItemGroup",
+                    new XAttribute("Condition", "'$(Configuration)' == 'Release'"));
+                _root.Add(releaseItemGroup);
+                anyUpdate = true;
+            }
+
+            // Check if the PackageReference for Release already exists, otherwise add it
+            var existingReleasePackageReference = releaseItemGroup.Descendants("PackageReference")
+                .FirstOrDefault(pr => pr.Attribute("Include")?.Value == package.PackageName);
+
+            if (existingReleasePackageReference == null)
+            {
+                releaseItemGroup.Add(newPackageReference);
+                anyUpdate = true;
+            }
+        }
+
+        // If any updates were made, mark the change
+        if (anyUpdate)
+        {
+            _anyUpdate = true;
+        }
+
+        return anyUpdate;
+    }
+
+
+    private string GetPackageVersion(string packageName)
+    {
+        // Logic to get the version for the package. If it's already in the csproj, you can fetch it from there.
+        var packageReference = _root!.Descendants("PackageReference")
+            .FirstOrDefault(p => p.Attribute("Include")?.Value == packageName);
+
+        if (packageReference != null)
+        {
+            return packageReference.Attribute("Version")?.Value ?? string.Empty;
+        }
+
+        // If the package is not found, you can handle this based on your needs.
+        return string.Empty;
+    }
+
 
     // Saves the updated csproj file if any changes have been made
     public void SaveChanges()
