@@ -155,10 +155,11 @@ public class CsProjEditor(string csprojPath)
             {
                 continue;
             }
-            if (packageReference.Attribute("PrivateAssets")?.Value == "all")
-            {
-                continue;
-            }
+            //has to now try to load in private assets.  because otherwise, some web assembly apps can't be updated otherwise.
+            //if (packageReference.Attribute("PrivateAssets")?.Value == "all")
+            //{
+            //    continue;
+            //}
 
             // Lookup for the custom version from the provided libraries list
             var customLibrary = libraries.FirstOrDefault(lib => string.Equals(lib.PackageName, packageName, StringComparison.OrdinalIgnoreCase));
