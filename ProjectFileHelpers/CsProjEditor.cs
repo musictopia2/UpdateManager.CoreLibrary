@@ -130,9 +130,6 @@ public class CsProjEditor(string csprojPath)
         {
             return false;
         }
-
-        bool anyUpdate = false;
-
         // Find all ItemGroup elements
         var itemGroups = _root!.Descendants("ItemGroup").ToList();
 
@@ -184,7 +181,6 @@ public class CsProjEditor(string csprojPath)
                 string latestVersion = await NuGetPackageChecker.GetLatestPublicVersionAsync(packageName);
                 if (string.IsNullOrEmpty(latestVersion))
                 {
-                    Console.WriteLine($"Package {packageName} not found on NuGet and not on the custom list.");
                     return false; // Can't update if not found in NuGet or the custom list
                 }
 
@@ -206,9 +202,7 @@ public class CsProjEditor(string csprojPath)
                 }
             }
         }
-
-        // If any updates were made, mark the change
-        return anyUpdate;
+        return true; //even if there was no changes, if this did not fail, then has to return true.  otherwise, i may think there are errors when there are no errors.
     }
 
     private static string AdjustToZeroPatchVersion(string latestVersion)
@@ -497,7 +491,7 @@ public class CsProjEditor(string csprojPath)
             }
 
             // Create a new PackageReference for Release mode
-            XElement newPackageReference = new XElement("PackageReference",
+            XElement newPackageReference = new ("PackageReference",
                 new XAttribute("Include", package.PackageName),
                 new XAttribute("Version", packageVersion) // Ensure this returns the correct version
             );
@@ -509,7 +503,7 @@ public class CsProjEditor(string csprojPath)
             // If ItemGroup for Debug doesn't exist, create it
             if (debugItemGroup == null)
             {
-                debugItemGroup = new XElement("ItemGroup",
+                debugItemGroup = new ("ItemGroup",
                     new XAttribute("Condition", "'$(Configuration)' == 'Debug'"));
                 _root.Add(debugItemGroup);
                 anyUpdate = true;
@@ -521,7 +515,7 @@ public class CsProjEditor(string csprojPath)
 
             if (existingProjectReference == null)
             {
-                XElement projectReference = new XElement("ProjectReference",
+                XElement projectReference = new ("ProjectReference",
                     new XAttribute("Include", package.PathToProject)
                 );
                 debugItemGroup.Add(projectReference);
