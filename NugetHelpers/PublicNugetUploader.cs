@@ -48,7 +48,8 @@ public class PublicNugetUploader : INugetUploader
             {
                 if (output.Contains("already exists", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Error: Package version already exists.");
+                    Console.WriteLine("Error: Package version already exists.  Marking as successful because then will check to see if it exist");
+                    return true; //if versioning is a problem, then redo later obviously.
                 }
                 else
                 {
