@@ -53,7 +53,14 @@ public class PublicNugetUploader : INugetUploader
                 }
                 else
                 {
-                    Console.WriteLine($"Error: {error}");
+                    if (string.IsNullOrWhiteSpace(error) == false)
+                    {
+                        Console.WriteLine($"Error: {error}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error: {output}");
+                    }
                 }
             }
             return isSuccess;
