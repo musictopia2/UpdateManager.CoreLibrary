@@ -194,9 +194,13 @@ public class CsProjEditor(string csprojPath)
                     }
                 }
 
-                // Compare and update the version if necessary
-                if (string.Compare(currentVersion, latestVersion) < 0)
+                // Parse the versions as Version objects
+                Version currentVersionObj = new (currentVersion);
+                Version latestVersionObj = new (latestVersion);
+
+                if (currentVersionObj.CompareTo(latestVersionObj) < 0)
                 {
+                    // Update the package reference to the latest version
                     packageReference.SetAttributeValue("Version", latestVersion);
                     _anyUpdate = true;
                 }
