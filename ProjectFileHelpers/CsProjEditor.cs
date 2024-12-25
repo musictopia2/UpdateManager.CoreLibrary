@@ -109,7 +109,14 @@ public class CsProjEditor(string csprojPath)
             if (targetFrameworkElement != null)
             {
                 string originalValue = targetFrameworkElement.Value;
-                string newValue = $"net{newNetVersion}.0";
+                string newValue;
+                newValue = $"net{newNetVersion}.0";
+                if (originalValue.EndsWith("-android"))
+                {
+                    newValue = $"{newValue}-android";
+                }
+                
+                
                 // Update the version if it is different
                 if (!originalValue.Equals(newValue, StringComparison.OrdinalIgnoreCase))
                 {
@@ -147,12 +154,14 @@ public class CsProjEditor(string csprojPath)
             {
                 string packageName = packageReference.Attribute("Include")?.Value!;
                 string currentVersion = packageReference.Attribute("Version")?.Value!;
-
+                if (currentVersion.Equals("$(mauiVersion)", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    continue;
+                }
                 if (string.IsNullOrEmpty(currentVersion))
                 {
                     return false; // Every dependency must have a version
                 }
-
                 // Skip if PrivateAssets="all"
                 //can't skip privateassets since there is something in webassembly that needs it.
 
