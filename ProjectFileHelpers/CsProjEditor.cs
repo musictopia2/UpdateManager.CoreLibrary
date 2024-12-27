@@ -584,6 +584,82 @@ public class CsProjEditor(string csprojPath)
         return anyUpdate;
     }
 
+    // Method to remove all ProjectReference elements from the .csproj file
+    public bool RemoveAllProjectReferences()
+    {
+        if (!CanGetRoot())
+        {
+            Console.WriteLine("Failed to get root element. Returning false.");
+            return false;
+        }
+
+        bool anyUpdate = false;
+
+        // Find all ItemGroup elements
+        var allItemGroups = _root!.Descendants("ItemGroup").ToList();
+
+        // Loop through each ItemGroup and remove ProjectReference elements
+        foreach (var itemGroup in allItemGroups)
+        {
+            var projectReferences = itemGroup.Descendants("ProjectReference").ToList();
+            foreach (var projectReference in projectReferences)
+            {
+                projectReference.Remove(); // Remove each ProjectReference
+                anyUpdate = true;
+            }
+        }
+
+        // If any ProjectReferences were removed, mark the change
+        if (anyUpdate)
+        {
+            _anyUpdate = true;
+        }
+
+        return anyUpdate;
+    }
+
+    // Method to add a new PackageReference
+    public bool AddPackageReference(NuGetPackageModel package)
+    {
+        if (!CanGetRoot())
+        {
+            Console.WriteLine("Failed to get root element. Returning false.");
+            return false;
+        }
+
+        // Find all ItemGroup elements
+        var itemGroups = _root!.Descendants("ItemGroup").ToList();
+
+        // Create a new PackageReference element with the package information
+        XElement newPackageReference = new("PackageReference",
+            new XAttribute("Include", package.PackageName),
+            new XAttribute("Version", package.Version)
+        );
+
+        // Find or create the appropriate ItemGroup for the given Framework
+        var itemGroup = itemGroups.FirstOrDefault(ig =>
+            ig.Descendants("PackageReference").Any(p => p.Attribute("Include")?.Value == package.PackageName));
+
+        // If no existing ItemGroup with the package reference is found, create a new ItemGroup
+        if (itemGroup == null)
+        {
+            itemGroup = new XElement("ItemGroup");
+            _root.Add(itemGroup); // Add the new ItemGroup to the root
+        }
+
+        // Check if this PackageReference is already present in the ItemGroup
+        var existingPackageReference = itemGroup.Descendants("PackageReference")
+            .FirstOrDefault(p => p.Attribute("Include")?.Value == package.PackageName);
+
+        if (existingPackageReference == null)
+        {
+            itemGroup.Add(newPackageReference); // Add the new PackageReference
+            _anyUpdate = true;
+        }
+        
+        return _anyUpdate;
+    }
+
 
     private string GetPackageVersion(string packageName)
     {
