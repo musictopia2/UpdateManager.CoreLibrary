@@ -82,6 +82,17 @@ public static class Extensions
         }
         return value;
     }
+    public static string GetNugetConfigPath(this IConfiguration configuration)
+    {
+        var value = configuration[UpdateSystemConfigurationKeys.PackageConfigFileKey];
+
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The NuGet config path is not registered in the configuration.");
+        }
+        return value;
+    }
     public static string GetRequiredNuGetPackagesPath(this IConfiguration configuration)
     {
         // Check if the configuration key is found
@@ -94,19 +105,20 @@ public static class Extensions
         }
         return value;
     }
-    public static string GetNugetConfigPath(this IConfiguration configuration)
+    public static string GetRequiredAppPackagesPath(this IConfiguration configuration)
     {
-        var value = configuration[UpdateSystemConfigurationKeys.PackageConfigFileKey];
+        var value = configuration[UpdateSystemConfigurationKeys.AppInfoKey];
 
         // If the key is not found, throw an exception
         if (string.IsNullOrEmpty(value))
         {
-            throw new ConfigurationKeyNotFoundException("The NuGet config path is not registered in the configuration.");
+            throw new ConfigurationKeyNotFoundException("The App path key is not registered in the configuration.");
         }
         return value;
     }
+    
     // Extract the major version from version string
-    public static int GetMajorVersiont(this string version)
+    public static int GetMajorVersion(this string version)
     {
         var versionParts = version.Split('.');
         if (versionParts.Length < 1)
