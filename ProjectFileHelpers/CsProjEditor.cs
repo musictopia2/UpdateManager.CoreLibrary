@@ -74,7 +74,23 @@ public class CsProjEditor(string csprojPath)
             _ => null // Return null if the value is invalid
         };
     }
-
+    public bool IsWindows()
+    {
+        if (CanGetRoot() == false)
+        {
+            throw new CustomBasicException("Cannot get root");
+        }
+        var wpfElement = _root!.Descendants("UseWPF").FirstOrDefault();
+        if (wpfElement is null)
+        {
+            return false;
+        }
+        if (wpfElement.Value == "true")
+        {
+            return true;
+        }
+        return false;
+    }
     public bool UpdateNetVersion(string newNetVersion)
     {
         if (CanGetRoot() == false)
@@ -83,8 +99,8 @@ public class CsProjEditor(string csprojPath)
         }
         //net9.0-windows
         // Check if the application is a Windows app by looking for OutputType=WinExe
-        var outputTypeElement = _root!.Descendants("OutputType").FirstOrDefault();
-        if (outputTypeElement != null && outputTypeElement.Value.Equals("WinExe", StringComparison.OrdinalIgnoreCase))
+        var wpfElement = _root!.Descendants("UseWPF").FirstOrDefault();
+        if (wpfElement != null && wpfElement.Value.Equals("true", StringComparison.OrdinalIgnoreCase))
         {
             // If it's a Windows app (WinExe), update the version in the format: Windows[version]net
             var targetFrameworkElement = _root.Descendants("TargetFramework").FirstOrDefault();
