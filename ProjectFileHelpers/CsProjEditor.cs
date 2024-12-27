@@ -617,8 +617,6 @@ public class CsProjEditor(string csprojPath)
 
         return anyUpdate;
     }
-
-    // Method to add a new PackageReference
     public bool AddPackageReference(NuGetPackageModel package)
     {
         if (!CanGetRoot())
@@ -630,35 +628,78 @@ public class CsProjEditor(string csprojPath)
         // Find all ItemGroup elements
         var itemGroups = _root!.Descendants("ItemGroup").ToList();
 
-        // Create a new PackageReference element with the package information
+        // Create the new PackageReference element with the package information
         XElement newPackageReference = new("PackageReference",
             new XAttribute("Include", package.PackageName),
             new XAttribute("Version", package.Version)
         );
 
-        // Find or create the appropriate ItemGroup for the given Framework
-        var itemGroup = itemGroups.FirstOrDefault(ig =>
-            ig.Descendants("PackageReference").Any(p => p.Attribute("Include")?.Value == package.PackageName));
+        bool updated = false;
 
-        // If no existing ItemGroup with the package reference is found, create a new ItemGroup
-        if (itemGroup == null)
+        // Step 1: Remove any "hosed" PackageReference from any ItemGroup that already contains it.
+        foreach (var itemGroup in itemGroups)
         {
-            itemGroup = new XElement("ItemGroup");
-            _root.Add(itemGroup); // Add the new ItemGroup to the root
+            var existingPackageReference = itemGroup.Descendants("PackageReference")
+                .FirstOrDefault(p => p.Attribute("Include")?.Value == package.PackageName);
+            int count = itemGroup.Descendants("PackageReference").Count();
+            if (existingPackageReference != null && count == 1)
+            {
+                // Remove the hosed reference
+                existingPackageReference.Remove();
+                updated = true;
+            }
         }
 
-        // Check if this PackageReference is already present in the ItemGroup
-        var existingPackageReference = itemGroup.Descendants("PackageReference")
+        // Step 2: Check if the PackageReference is already present in the correct ItemGroup
+        var targetItemGroup = itemGroups.FirstOrDefault(ig =>
+            ig.Descendants("PackageReference")
+              .Any(p => p.Attribute("Include")?.Value == package.PackageName));
+
+        // If no ItemGroup exists with the correct reference, create a new one and add the new PackageReference
+        if (targetItemGroup == null)
+        {
+            // Look for an existing ItemGroup that should receive the new PackageReference
+            targetItemGroup = _root.Descendants("ItemGroup")
+                .FirstOrDefault(ig => ig.Descendants("PackageReference").Any());
+
+            // If no valid ItemGroup exists, create a new one
+            if (targetItemGroup == null)
+            {
+                targetItemGroup = new XElement("ItemGroup");
+                _root.Add(targetItemGroup); // Add to the root
+            }
+        }
+
+        // Step 3: Add the PackageReference to the found or newly created ItemGroup
+        var existingPackageReferenceInTargetGroup = targetItemGroup.Descendants("PackageReference")
             .FirstOrDefault(p => p.Attribute("Include")?.Value == package.PackageName);
 
-        if (existingPackageReference == null)
+        if (existingPackageReferenceInTargetGroup == null)
         {
-            itemGroup.Add(newPackageReference); // Add the new PackageReference
+            targetItemGroup.Add(newPackageReference);  // Add to the correct ItemGroup
+            updated = true;
+        }
+
+        // Step 4: Remove any empty ItemGroup elements (those without any PackageReference or relevant elements)
+        var emptyItemGroups = _root.Descendants("ItemGroup")
+            .Where(ig => !ig.HasElements)  // Check if ItemGroup has no child elements
+            .ToList();
+
+        foreach (var emptyGroup in emptyItemGroups)
+        {
+            emptyGroup.Remove();  // Remove the empty ItemGroup
+            updated = true;
+        }
+
+        // Step 5: If any update was made, mark _anyUpdate to true
+        if (updated)
+        {
             _anyUpdate = true;
         }
-        
-        return _anyUpdate;
+
+        return updated;
     }
+
 
 
     private string GetPackageVersion(string packageName)
