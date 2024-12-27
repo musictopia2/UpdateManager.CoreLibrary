@@ -30,7 +30,7 @@ public class FilePackagesContext : IPackagesContext
         package.Version = updatedPackage.Version;
         package.Framework = updatedPackage.Framework;
         package.NugetPackagePath = updatedPackage.NugetPackagePath;
-        package.TemporarilyIgnore = updatedPackage.TemporarilyIgnore;
+        package.IsExcluded = updatedPackage.IsExcluded;
 
         // Save the updated list back to the file
         await jj1.SaveObjectAsync(_packagePath, _list);
