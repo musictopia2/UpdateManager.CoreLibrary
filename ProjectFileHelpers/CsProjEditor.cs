@@ -187,7 +187,7 @@ public class CsProjEditor(string csprojPath)
                 //}
 
                 // Lookup for the custom version from the provided libraries list
-                var customLibrary = libraries.FirstOrDefault(lib => string.Equals(lib.PackageName, packageName, StringComparison.OrdinalIgnoreCase));
+                var customLibrary = libraries.FirstOrDefault(lib => string.Equals(lib.GetPackageID(), packageName, StringComparison.OrdinalIgnoreCase));
                 if (customLibrary != null)
                 {
                     // If a custom version exists, update it
