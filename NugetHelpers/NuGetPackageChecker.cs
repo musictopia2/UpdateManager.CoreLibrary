@@ -6,6 +6,7 @@ public static class NuGetPackageChecker
     private static readonly HttpClient client = new();
     public static async Task<string> GetLatestPublicVersionAsync(string packageName)
     {
+        string latestVersion = "";
         // Construct the URL to the NuGet Registration API (for SemVer 2 packages)
         string url = $"https://api.nuget.org/v3/registration5-gz-semver2/{packageName.ToLower()}/index.json";
 
@@ -27,48 +28,49 @@ public static class NuGetPackageChecker
             // Read and decompress the response content if necessary
             string responseContent = await ReadResponseContentAsync(response, isGzip);
 
-            // Log the full response to debug what's happening
-            //Console.WriteLine("Response Content (raw): ");
-            //Console.WriteLine(responseContent);  // Log the raw response content
-
             // Parse the JSON response
             try
             {
                 using JsonDocument doc = JsonDocument.Parse(responseContent);
-                // Log the entire structure to inspect the JSON
-                //Console.WriteLine("Parsed JSON Structure:");
-                //Console.WriteLine(doc.RootElement.ToString());
 
-                // Navigate to the "items" array in the JSON response
-                if (doc.RootElement.TryGetProperty("items", out JsonElement items))
+                // Try the newer format first
+                if (doc.RootElement.TryGetProperty("items", out JsonElement items) && items.GetArrayLength() > 0)
                 {
-                    // Get the last item from the "items" array manually (since LastOrDefault() doesn't exist for JsonElement)
-                    JsonElement latestItem = default;
+                    // Iterate through each item and collect all versions
                     foreach (var item in items.EnumerateArray())
                     {
-                        latestItem = item;
-                    }
+                        if (item.TryGetProperty("items", out JsonElement versions) && versions.GetArrayLength() > 0)
+                        {
+                            // Iterate through the versions in this "items" array
+                            foreach (var versionItem in versions.EnumerateArray())
+                            {
+                                // Extract the "version" directly from catalogEntry
+                                if (versionItem.TryGetProperty("catalogEntry", out JsonElement catalogEntry))
+                                {
+                                    if (catalogEntry.TryGetProperty("version", out JsonElement version))
+                                    {
+                                        string versionValue = version.GetString()!;
+                                        if (!IsPreReleaseVersion(versionValue)) // Only add stable versions
+                                        {
+                                            latestVersion = versionValue;
+                                            //break; // Since the versions are sorted, the first one is the latest
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
-                    // If we have a valid latest item, extract the "upper" version
-                    if (latestItem.ValueKind == JsonValueKind.Object)
-                    {
-                        if (latestItem.TryGetProperty("upper", out JsonElement upperVersion))
-                        {
-                            string latestVersion = upperVersion.GetString()!;
-                            //Console.WriteLine($"The latest version of {packageName} is {latestVersion}");
-                            return latestVersion;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Error: 'upper' version not found in the response.");
-                            return null!;
-                        }
+                        // If we have found a valid latest version, no need to continue checking
+                        //if (!string.IsNullOrEmpty(latestVersion))
+                        //{
+                        //    break;
+                        //}
                     }
                 }
-                else
+                // If no version is found using the new format, try the old format
+                if (string.IsNullOrEmpty(latestVersion))
                 {
-                    Console.WriteLine("Error: 'items' property not found in the response.");
-                    return null!;
+                    latestVersion = await GetLatestPublicVersionFromOldFormat(packageName);
                 }
             }
             catch (Exception parseEx)
@@ -76,6 +78,8 @@ public static class NuGetPackageChecker
                 Console.WriteLine($"Error parsing JSON response: {parseEx.Message}");
                 return null!;
             }
+
+            return latestVersion;
         }
         catch (Exception ex)
         {
@@ -83,8 +87,96 @@ public static class NuGetPackageChecker
             Console.WriteLine($"Error checking latest version: {ex.Message}");
             return null!;
         }
-        return null!;
     }
+
+    // This method handles the old format, which looks for the 'upper' property in the 'items' array
+    private static async Task<string> GetLatestPublicVersionFromOldFormat(string packageName)
+    {
+        string url = $"https://api.nuget.org/v3/registration5-gz-semver2/{packageName.ToLower()}/index.json";
+        try
+        {
+            string latestVersion = "";
+            HttpResponseMessage response = await client.GetAsync(url);
+
+            // Check if the response is successful
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Error: Failed to query NuGet. Status Code: {response.StatusCode}");
+                return null!;
+            }
+
+            // Check if the response is GZipped (compressed)
+            bool isGzip = response.Content.Headers.ContentEncoding.Contains("gzip");
+
+            // Read and decompress the response content if necessary
+            string responseContent = await ReadResponseContentAsync(response, isGzip);
+
+            using JsonDocument doc = JsonDocument.Parse(responseContent);
+            if (doc.RootElement.TryGetProperty("items", out JsonElement items))
+            {
+                // Get the last item from the "items" array manually (since LastOrDefault() doesn't exist for JsonElement)
+                JsonElement latestItem = default;
+                foreach (var item in items.EnumerateArray())
+                {
+                    latestItem = item;
+
+
+                    if (latestItem.ValueKind == JsonValueKind.Object)
+                    {
+                        if (latestItem.TryGetProperty("upper", out JsonElement upperVersion))
+                        {
+                            string possibleVersion = upperVersion.GetString()!;
+                            if (IsPreReleaseVersion(possibleVersion) == false)
+                            {
+
+                                latestVersion = possibleVersion;
+
+                            }
+                        }
+                        //else
+                        //{
+                        //    Console.WriteLine("Error: 'upper' version not found in the response (old format).");
+                        //    return null!;
+                        //}
+                    }
+                    //return null;
+
+                }
+                return latestVersion;
+
+
+            }
+            else
+            {
+                Console.WriteLine("Error: 'items' property not found in the response (old format).");
+                return null!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking latest version in old format: {ex.Message}");
+            return null!;
+        }
+    }
+
+
+
+    // Check if the version contains a pre-release identifier (e.g., "-beta", "-alpha", "-preview")
+    private static bool IsPreReleaseVersion(string version)
+    {
+        return version.Contains("-") || version.Contains("preview", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Compare version strings using the Version class to compare numerically
+    private static int CompareVersions(string version1, string version2)
+    {
+        var v1 = new Version(version1);
+        var v2 = new Version(version2);
+        return v1.CompareTo(v2);
+    }
+
+
+
     public static async Task<bool> IsPublicPackageAvailableAsync(string packageName, string version)
     {
         // Construct the URL dynamically using the package name
