@@ -147,7 +147,7 @@ public class CsProjEditor(string csprojPath)
 
 
     // Generic method to update dependencies (NuGet or .NET version)
-    public async Task<bool> UpdateDependenciesAsync<T>(BasicList<T> libraries) where T : IPackageVersionable
+    public async Task<bool> UpdateDependenciesAsync<T>(BasicList<T> projects) where T : IVersionable
     {
         if (CanGetRoot() == false)
         {
@@ -187,7 +187,7 @@ public class CsProjEditor(string csprojPath)
                 //}
 
                 // Lookup for the custom version from the provided libraries list
-                var customLibrary = libraries.FirstOrDefault(lib => string.Equals(lib.GetPackageID(), packageName, StringComparison.OrdinalIgnoreCase));
+                var customLibrary = projects.FirstOrDefault(lib => string.Equals(lib.GetPackageID(), packageName, StringComparison.OrdinalIgnoreCase));
                 if (customLibrary != null)
                 {
                     // If a custom version exists, update it

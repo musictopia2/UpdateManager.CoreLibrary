@@ -3,6 +3,7 @@ public static class UpdateSystemConfigurationKeys
 {
     // Key for custom package information (name, version, csproj, etc.)
     public static string CustomPackageInfoKey => "CustomPackageInfoKey";
+    public static string CustomToolInfoKey => "CustomToolInfoKey";
 
     // Key for configuration file path for managing apps.
     public static string AppInfoKey => "AppInfoKey";
@@ -18,4 +19,5 @@ public static class UpdateSystemConfigurationKeys
     public static string PrefixKey => "PrefixKey";
     public static string PostBuildFeedProcessorKey => "PostBuildFeedProcessorKey";
     public static string UploadedPackagesStoragePathKey => "UploadedPackagesStoragePathKey";
+    public static string UploadedToolsStoragePathKey => "UploadedtoolsStoragePathKey";
 }

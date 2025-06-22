@@ -6,7 +6,7 @@ public class NugetPacker : INugetPacker
         var projectDirectory = Path.GetDirectoryName(project.CsProjPath);
         if (string.IsNullOrEmpty(projectDirectory) || !Directory.Exists(projectDirectory))
         {
-            Console.WriteLine("Invalid or non-existent project directory.");
+            Console.WriteLine($"Invalid or non-existent project directory.  The directory was {projectDirectory}"  );
             return false;
         }
         Console.WriteLine($"Creating Package For {projectDirectory}");
@@ -62,7 +62,7 @@ public class NugetPacker : INugetPacker
             // Check for any errors based on the process exit code
             if (process.ExitCode != 0)
             {
-                Console.WriteLine($"Error creating NuGet package: {error}");
+                Console.WriteLine($"Error creating NuGet package: {output}");
                 return false;
             }
 

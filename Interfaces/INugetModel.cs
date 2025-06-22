@@ -1,5 +1,5 @@
 ﻿namespace UpdateManager.CoreLibrary.Interfaces;
-public interface INugetModel : IPackageVersionable
+public interface INugetModel : IVersionable
 {
     string CsProjPath { get; set; }
     string NugetPackagePath { get; set; }

@@ -6,7 +6,7 @@ public static class Extensions
         string output = Path.GetDirectoryName(model.CsProjPath)!;
         return output;
     }
-    public static string GetPackageID(this IPackageVersionable package)
+    public static string GetPackageID(this IVersionable package)
     {
         if (string.IsNullOrWhiteSpace(package.PrefixForPackageName))
         {
@@ -18,13 +18,22 @@ public static class Extensions
     {
         // Retrieve the storage path for uploaded packages from the configuration
         var value = configuration[UpdateSystemConfigurationKeys.UploadedPackagesStoragePathKey];
-
         // If the key is not found, throw an exception
         if (string.IsNullOrEmpty(value))
         {
             throw new ConfigurationKeyNotFoundException("The uploaded packages storage path is not registered in the configuration.");
         }
-
+        return value;
+    }
+    public static string GetUploadedToolsStoragePathFromConfig(this IConfiguration configuration)
+    {
+        // Retrieve the storage path for uploaded tools from the configuration
+        var value = configuration[UpdateSystemConfigurationKeys.UploadedToolsStoragePathKey];
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The uploaded tools storage path is not registered in the configuration.");
+        }
         return value;
     }
     public static string GetFeedPostProcessorProgramFromConfig(this IConfiguration configuration)
@@ -102,6 +111,17 @@ public static class Extensions
         if (string.IsNullOrEmpty(value))
         {
             throw new ConfigurationKeyNotFoundException("The NuGet package path key is not registered in the configuration.");
+        }
+        return value;
+    }
+    public static string GetRequiredNuGetToolPath(this IConfiguration configuration)
+    {
+        // Check if the configuration key is found
+        var value = configuration[UpdateSystemConfigurationKeys.CustomToolInfoKey];
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The Custom Tool path key is not registered in the configuration.");
         }
         return value;
     }
