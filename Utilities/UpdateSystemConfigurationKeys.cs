@@ -17,7 +17,8 @@ public static class UpdateSystemConfigurationKeys
     public static string DevelopmentPackageKey => "DevelopmentPackageKey";
     public static string StagingPackageKey => "StagingPackageKey";
     public static string PrefixKey => "PrefixKey";
-    public static string PostBuildFeedProcessorKey => "PostBuildFeedProcessorKey";
+    public static string PostBuildFeedProcessorKey_Packages => "PostBuildFeedProcessorKey_Packages";
+    public static string PostBuildFeedProcessorKey_Tools => "PostBuildFeedProcessorKey_Tools";
     public static string UploadedPackagesStoragePathKey => "UploadedPackagesStoragePathKey";
     public static string UploadedToolsStoragePathKey => "UploadedtoolsStoragePathKey";
 }

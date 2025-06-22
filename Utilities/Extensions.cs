@@ -36,15 +36,25 @@ public static class Extensions
         }
         return value;
     }
-    public static string GetFeedPostProcessorProgramFromConfig(this IConfiguration configuration)
+    public static string GetPackagePostBuildFeedProcessorProgram(this IConfiguration configuration)
     {
-        var value = configuration[UpdateSystemConfigurationKeys.PostBuildFeedProcessorKey];
+        var value = configuration[UpdateSystemConfigurationKeys.PostBuildFeedProcessorKey_Packages];
 
         // If the key is not found, throw an exception
         if (string.IsNullOrEmpty(value))
         {
             throw new ConfigurationKeyNotFoundException("The post program is not registered in the configuration.");
         }
+        return value;
+    }
+    public static string GetToolPostBuildFeedProcessorProgram(this IConfiguration configuration)
+    {
+        var value = configuration[UpdateSystemConfigurationKeys.PostBuildFeedProcessorKey_Tools];
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The tool post-build processor is not registered in the configuration.");
+        }
+
         return value;
     }
     public static string GetPackagePrefixFromConfig(this IConfiguration configuration)
