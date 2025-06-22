@@ -379,6 +379,38 @@ public class CsProjEditor(string csprojPath)
 
         return true; // Successfully added the PostBuild command
     }
+    public void AddAsTool(string toolName)
+    {
+        if (!CanGetRoot())
+        {
+            throw new CustomBasicException("Unable to get root");
+        }
+
+        XElement propertyGroup = _root!.Descendants("PropertyGroup").FirstOrDefault()! ?? throw new CustomBasicException("No property group found in the csproj file.");
+        bool updated = false;
+
+        void AddOrUpdateElement(string elementName, string value)
+        {
+            var element = propertyGroup.Element(elementName);
+            if (element == null)
+            {
+                propertyGroup.Add(new XElement(elementName, value));
+                updated = true;
+            }
+            else if (element.Value != value)
+            {
+                element.Value = value;
+                updated = true;
+            }
+        }
+        AddOrUpdateElement("ToolCommandName", toolName);
+        AddOrUpdateElement("PackAsTool", "true");
+        AddOrUpdateElement("PackageOutputPath", "./nupkg");
+        if (updated)
+        {
+            _anyUpdate = true;
+        }
+    }
     public string VersionUsed()
     {
         if (CanGetRoot() == false)
