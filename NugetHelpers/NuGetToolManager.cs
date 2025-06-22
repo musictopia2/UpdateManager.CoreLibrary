@@ -16,13 +16,23 @@ public class NuGetToolManager
     // Uninstall globally, version optional (null means uninstall all versions)
     public static async Task UninstallToolAsync(string toolId, string? version = null, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(toolId))
-        {
-            throw new ArgumentException("Tool ID must be provided.", nameof(toolId));
-        }
         string versionArg = string.IsNullOrEmpty(version) ? "" : $" --version {version}";
         string arguments = $"tool uninstall -g {toolId}{versionArg}";
-        await RunDotnetCommandAsync(arguments, cancellationToken);
+        try
+        {
+            await RunDotnetCommandAsync(arguments, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            if (ex.Message.Contains("is not currently installed", StringComparison.OrdinalIgnoreCase))
+            {
+                // Suppress the error — tool wasn't installed, and that's fine
+                return;
+            }
+
+            // Re-throw for all other cases
+            throw;
+        }
     }
 
     // Helper method to run dotnet CLI commands
