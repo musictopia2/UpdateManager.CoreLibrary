@@ -1,5 +1,5 @@
 ﻿namespace UpdateManager.CoreLibrary.Models;
-public class NuGetToolModel : IVersionable
+public class NuGetToolModel : INugetModel
 {
     public string PackageName { get; set; } = "";
     public string PrefixForPackageName { get; set; } = "";
