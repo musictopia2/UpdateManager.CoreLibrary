@@ -24,9 +24,10 @@ public class NuGetToolManager
         }
         catch (InvalidOperationException ex)
         {
-            if (ex.Message.Contains("is not currently installed", StringComparison.OrdinalIgnoreCase))
+            if (ex.Message.Contains("is not currently installed", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("could not be found", StringComparison.OrdinalIgnoreCase))
             {
-                // Suppress the error — tool wasn't installed, and that's fine
+                // Tool is not installed — this is fine
                 return;
             }
 

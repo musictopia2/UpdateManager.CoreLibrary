@@ -405,7 +405,6 @@ public class CsProjEditor(string csprojPath)
         }
         AddOrUpdateElement("ToolCommandName", toolName);
         AddOrUpdateElement("PackAsTool", "true");
-        AddOrUpdateElement("PackageOutputPath", "./nupkg");
         if (updated)
         {
             _anyUpdate = true;
