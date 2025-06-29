@@ -8,7 +8,7 @@
     <RunPostBuildAppCondition Condition="'$(Configuration)' == 'Release'">true</RunPostBuildAppCondition>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CommonBasicLibraries" Version="9.0.7" />
+    <PackageReference Include="CommonBasicLibraries" Version="9.0.49" />
     
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

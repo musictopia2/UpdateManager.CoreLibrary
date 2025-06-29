@@ -1,4 +1,5 @@
-﻿namespace UpdateManager.CoreLibrary.Utilities;
+﻿
+namespace UpdateManager.CoreLibrary.Utilities;
 public static class Extensions
 {
     public static string GetRepositoryDirectory(this INugetModel model)
