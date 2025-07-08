@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace UpdateManager.CoreLibrary.NugetHelpers;
 public static class NuGetPackageChecker
 {
-    private static readonly HttpClient client = new();
+    private static readonly HttpClient _client = new();
     public static async Task<string> GetLatestPublicVersionAsync(string packageName)
     {
         string latestVersion = "";
@@ -13,7 +13,7 @@ public static class NuGetPackageChecker
         try
         {
             // Send an HTTP GET request to the NuGet Registration API
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response = await _client.GetAsync(url);
 
             // Check if the response is successful
             if (!response.IsSuccessStatusCode)
@@ -96,7 +96,7 @@ public static class NuGetPackageChecker
         try
         {
             string latestVersion = "";
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response = await _client.GetAsync(url);
 
             // Check if the response is successful
             if (!response.IsSuccessStatusCode)
@@ -164,7 +164,7 @@ public static class NuGetPackageChecker
     // Check if the version contains a pre-release identifier (e.g., "-beta", "-alpha", "-preview")
     private static bool IsPreReleaseVersion(string version)
     {
-        return version.Contains("-") || version.Contains("preview", StringComparison.OrdinalIgnoreCase);
+        return version.Contains('-') || version.Contains("preview", StringComparison.OrdinalIgnoreCase);
     }
 
     // Compare version strings using the Version class to compare numerically
@@ -181,7 +181,7 @@ public static class NuGetPackageChecker
 
         try
         {
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response = await _client.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Error: Failed to query NuGet. Status Code: {response.StatusCode}");
@@ -193,46 +193,45 @@ public static class NuGetPackageChecker
 
             using JsonDocument doc = JsonDocument.Parse(responseContent);
 
-            if (doc.RootElement.TryGetProperty("items", out JsonElement outerItems))
+            if (!doc.RootElement.TryGetProperty("items", out JsonElement outerItems))
             {
-                // Materialize outer items and reverse
-                var outerItemList = outerItems.EnumerateArray().Reverse().ToList();
+                return false;
+            }
 
-                foreach (var outerItem in outerItemList)
+            foreach (var outerItem in outerItems.EnumerateArray().Reverse())
+            {
+                if (outerItem.TryGetProperty("items", out JsonElement innerItems))
                 {
-                    if (outerItem.TryGetProperty("items", out JsonElement innerItems))
+                    // Old-style: inner items are inlined
+                    foreach (var packageEntry in innerItems.EnumerateArray().Reverse())
                     {
-                        // Materialize inner items and reverse
-                        var innerItemList = innerItems.EnumerateArray().Reverse().ToList();
-
-                        foreach (var packageEntry in innerItemList)
+                        if (CheckPackageEntry(packageEntry, version))
                         {
-                            if (packageEntry.TryGetProperty("catalogEntry", out JsonElement catalogEntry))
+                            return true;
+                        }
+                    }
+                }
+                else if (outerItem.TryGetProperty("@id", out JsonElement pageUrlElement))
+                {
+                    // New-style: sub-page must be fetched
+                    string pageUrl = pageUrlElement.GetString()!;
+                    HttpResponseMessage subPageResponse = await _client.GetAsync(pageUrl);
+
+                    if (!subPageResponse.IsSuccessStatusCode)
+                    {
+                        continue;
+                    }
+
+                    string subPageContent = await ReadResponseContentAsync(subPageResponse, subPageResponse.Content.Headers.ContentEncoding.Contains("gzip"));
+                    using JsonDocument subDoc = JsonDocument.Parse(subPageContent);
+
+                    if (subDoc.RootElement.TryGetProperty("items", out JsonElement subItems))
+                    {
+                        foreach (var packageEntry in subItems.EnumerateArray().Reverse())
+                        {
+                            if (CheckPackageEntry(packageEntry, version))
                             {
-                                if (catalogEntry.TryGetProperty("version", out JsonElement entryVersion))
-                                {
-                                    string versionStr = entryVersion.GetString()!;
-                                    if (string.Equals(versionStr, version, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        // Optional: Skip unlisted or invalid entries
-                                        bool isListed = catalogEntry.TryGetProperty("listed", out JsonElement listedElement) && listedElement.GetBoolean();
-                                        if (!isListed)
-                                        {
-                                            //Console.WriteLine($"Found version {version}, but it is unlisted.");
-                                            return false;
-                                        }
-
-                                        if (catalogEntry.TryGetProperty("published", out JsonElement publishedElement) &&
-                                            DateTime.TryParse(publishedElement.GetString(), out DateTime publishedDate) &&
-                                            publishedDate.Year < 2000)
-                                        {
-                                            //Console.WriteLine($"Found version {version}, but it has a suspicious publish date: {publishedDate}");
-                                            return false;
-                                        }
-
-                                        return true;
-                                    }
-                                }
+                                return true;
                             }
                         }
                     }
@@ -246,6 +245,36 @@ public static class NuGetPackageChecker
             Console.WriteLine($"Error checking package version availability: {ex.Message}");
             return false;
         }
+    }
+
+    private static bool CheckPackageEntry(JsonElement packageEntry, string version)
+    {
+        if (packageEntry.TryGetProperty("catalogEntry", out JsonElement catalogEntry))
+        {
+            if (catalogEntry.TryGetProperty("version", out JsonElement entryVersion))
+            {
+                string versionStr = entryVersion.GetString()!;
+                if (string.Equals(versionStr, version, StringComparison.OrdinalIgnoreCase))
+                {
+                    bool isListed = catalogEntry.TryGetProperty("listed", out JsonElement listedElement) && listedElement.GetBoolean();
+                    if (!isListed)
+                    {
+                        return false;
+                    }
+
+                    if (catalogEntry.TryGetProperty("published", out JsonElement publishedElement) &&
+                        DateTime.TryParse(publishedElement.GetString(), out DateTime publishedDate) &&
+                        publishedDate.Year < 2000)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
     private static async Task<string> ReadResponseContentAsync(HttpResponseMessage response, bool isGzip)
     {
