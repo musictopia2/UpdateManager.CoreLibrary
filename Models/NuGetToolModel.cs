@@ -23,6 +23,4 @@ public class NuGetToolModel : INugetModel
     /// </summary>
     public bool IsExcluded { get; set; }
     public bool Development { get; set; } = false; // if this is in development, then can put in a development feed.
-    //if its null, then never has been updated.
-    public DateTime? LastUpdated { get; set; } //this means if there are no changes to the files when i rerun the program, then this won't even run.
 }
