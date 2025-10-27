@@ -79,14 +79,8 @@ public class NugetPacker : INugetPacker, INugetTemplatePacker
 
     public async Task<bool> CreateNugetTemplatePackageAsync(NuGetTemplateModel template, CancellationToken cancellationToken = default)
     {
-        var projectDirectory = Path.GetDirectoryName(template.CsProjPath);
-        if (string.IsNullOrEmpty(projectDirectory) || !Directory.Exists(projectDirectory))
-        {
-            Console.WriteLine($"Invalid or non-existent project directory.  The directory was {projectDirectory}");
-            return false;
-        }
         string packageId = template.GetPackageID();
-        Console.WriteLine($"Creating .nuspec For {projectDirectory}");
+        Console.WriteLine($"Creating .nuspec For {template.Directory}");
         string details = $"""
             <package>
               <metadata>
@@ -104,9 +98,9 @@ public class NugetPacker : INugetPacker, INugetTemplatePacker
             </package>
             """;
         XElement source = XElement.Parse(details);
-        string firstSave = Path.Combine(projectDirectory, $"{template.PackageName}.nuspec");
+        string firstSave = Path.Combine(template.Directory, $"{template.PackageName}.nuspec");
         source.Save(firstSave);
-        Console.WriteLine($"Creating Package For {projectDirectory}");
+        Console.WriteLine($"Creating Package For {template.Directory}");
         try
         {
             await ff1.DeleteSeveralFilesAsync(template.NugetPackagePath, ".nupkg");
@@ -116,7 +110,7 @@ public class NugetPacker : INugetPacker, INugetTemplatePacker
             {
                 FileName = "dotnet",
                 Arguments = arguments,  // Using the full path to the .csproj file
-                WorkingDirectory = projectDirectory,  // Ensure we are in the correct directory
+                WorkingDirectory = template.Directory,  // Ensure we are in the correct directory
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

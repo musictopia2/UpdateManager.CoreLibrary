@@ -1,8 +1,9 @@
 ﻿namespace UpdateManager.CoreLibrary.Models;
-public class NuGetTemplateModel : INugetModel
+public class NuGetTemplateModel : IVersionable
 {
-    public string CsProjPath { get; set; } = "";
+    //public string CsProjPath { get; set; } = "";
     public string NugetPackagePath { get; set; } = "";
+    public string Directory { get; set; } = "";
     public bool Development { get; set; }
     public string PackageName { get; set; } = "";
     public string PrefixForPackageName { get; set; } = "";
