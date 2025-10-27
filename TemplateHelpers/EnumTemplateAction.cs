@@ -1,6 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.TemplateHelpers;
-public enum EnumTemplateAction
-{
-    Uninstall,
-    Install
-}
+﻿//namespace UpdateManager.CoreLibrary.TemplateHelpers;
+//public enum EnumTemplateAction
+//{
+//    Uninstall,
+//    Install
+//}

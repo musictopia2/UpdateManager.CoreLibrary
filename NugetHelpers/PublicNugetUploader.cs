@@ -7,7 +7,7 @@ public class PublicNugetUploader : INugetUploader
     public async Task<bool> UploadNugetPackageAsync(string nugetFilePath, CancellationToken cancellationToken = default)
     {
         // Make sure the provided file exists
-        if (!File.Exists(nugetFilePath))
+        if (ff1.FileExists(nugetFilePath) == false)
         {
             Console.WriteLine("Error: NuGet package file not found.");
             return false;

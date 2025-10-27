@@ -1,5 +1,5 @@
 ﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
-public class NugetPacker : INugetPacker
+public class NugetPacker : INugetPacker, INugetTemplatePacker
 {
     public async Task<bool> CreateNugetPackageAsync(INugetModel project, bool noBuild, CancellationToken cancellationToken)
     {
@@ -66,6 +66,89 @@ public class NugetPacker : INugetPacker
                 return false;
             }
 
+            Console.WriteLine("NuGet package created successfully.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // Log any exceptions that occur during the process
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> CreateNugetTemplatePackageAsync(NuGetTemplateModel template, CancellationToken cancellationToken = default)
+    {
+        var projectDirectory = Path.GetDirectoryName(template.CsProjPath);
+        if (string.IsNullOrEmpty(projectDirectory) || !Directory.Exists(projectDirectory))
+        {
+            Console.WriteLine($"Invalid or non-existent project directory.  The directory was {projectDirectory}");
+            return false;
+        }
+        string packageId = template.GetPackageID();
+        Console.WriteLine($"Creating .nuspec For {projectDirectory}");
+        string details = $"""
+            <package>
+              <metadata>
+                <id>{packageId}</id>
+                <version>{template.Version}</version>
+                <authors>musictopia</authors>
+                <description>{template.PackageName}</description>
+                <packageTypes>
+                  <packageType name="Template" />
+                </packageTypes>
+              </metadata>
+              <files>
+                <file src="**\*" target="content" />
+              </files>
+            </package>
+            """;
+        XElement source = XElement.Parse(details);
+        string firstSave = Path.Combine(projectDirectory, $"{template.PackageName}.nuspec");
+        source.Save(firstSave);
+        Console.WriteLine($"Creating Package For {projectDirectory}");
+        try
+        {
+            await ff1.DeleteSeveralFilesAsync(template.NugetPackagePath, ".nupkg");
+            string arguments = $"nuget pack {template.PackageName}.nuspec -OutputDirectory ./nupkg";
+            //this means the nuget folder will be in the /nupkg subfolder of the project directory.
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = arguments,  // Using the full path to the .csproj file
+                WorkingDirectory = projectDirectory,  // Ensure we are in the correct directory
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                Console.WriteLine("Failed to start the process.");
+                return false;
+            }
+
+            // Capture output and errors from the process
+            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var error = await process.StandardError.ReadToEndAsync(cancellationToken);
+
+            // Check if the process was cancelled
+            if (cancellationToken.IsCancellationRequested)
+            {
+                Console.WriteLine("Process was cancelled.");
+                process.Kill();
+                return false;
+            }
+
+            await process.WaitForExitAsync(cancellationToken);
+
+            // Check for any errors based on the process exit code
+            if (process.ExitCode != 0)
+            {
+                Console.WriteLine($"Error creating NuGet package: {output}");
+                return false;
+            }
             Console.WriteLine("NuGet package created successfully.");
             return true;
         }

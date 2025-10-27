@@ -12,7 +12,7 @@ public class FileUploadedToolsStorage : IUploadedToolsStorage
         catch (Exception ex)
         {
             // Add specific file I/O exception handling here if needed
-            Console.WriteLine($"Error saving the uploaded packages: {ex.Message}");
+            Console.WriteLine($"Error saving the uploaded tools: {ex.Message}");
             throw;
         }
     }
@@ -32,7 +32,7 @@ public class FileUploadedToolsStorage : IUploadedToolsStorage
         }
         else
         {
-            throw new InvalidOperationException($"Package with ID '{packageId}' not found.");
+            throw new InvalidOperationException($"Tool with ID '{packageId}' not found.");
         }
     }
     async Task<BasicList<UploadToolModel>> IUploadedToolsStorage.GetAllUploadedToolsAsync()
@@ -50,7 +50,7 @@ public class FileUploadedToolsStorage : IUploadedToolsStorage
         catch (Exception ex)
         {
             // Log or handle specific errors if the retrieval fails
-            Console.WriteLine($"Error retrieving uploaded packages: {ex.Message}");
+            Console.WriteLine($"Error retrieving uploaded tools: {ex.Message}");
             throw;
         }
     }
@@ -62,7 +62,7 @@ public class FileUploadedToolsStorage : IUploadedToolsStorage
     async Task IUploadedToolsStorage.UpdateUploadedToolAsync(UploadToolModel tool)
     {
         var found = _list.SingleOrDefault(x => x.PackageId == tool.PackageId)
-           ?? throw new InvalidOperationException($"Package '{tool.PackageId}' not found.");
+           ?? throw new InvalidOperationException($"Tool '{tool.PackageId}' not found.");
         // Update the tool details
         found.NugetFilePath = tool.NugetFilePath;
         found.PackageId = tool.PackageId;

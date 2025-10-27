@@ -37,6 +37,17 @@ public static class Extensions
         }
         return value;
     }
+    public static string GetUploadedTemplatesStoragePathFromConfig(this IConfiguration configuration)
+    {
+        // Retrieve the storage path for uploaded templates from the configuration
+        var value = configuration[UpdateSystemConfigurationKeys.UploadedTemplatesStoragePathKey];
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The uploaded templates storage path is not registered in the configuration.");
+        }
+        return value;
+    }
     public static string GetPackagePostBuildFeedProcessorProgram(this IConfiguration configuration)
     {
         var value = configuration[UpdateSystemConfigurationKeys.PostBuildFeedProcessorKey_Packages];
@@ -133,6 +144,17 @@ public static class Extensions
         if (string.IsNullOrEmpty(value))
         {
             throw new ConfigurationKeyNotFoundException("The Custom Tool path key is not registered in the configuration.");
+        }
+        return value;
+    }
+    public static string GetRequiredNuGetTemplatePath(this IConfiguration configuration)
+    {
+        // Check if the configuration key is found
+        var value = configuration[UpdateSystemConfigurationKeys.CustomTemplateInfoKey];
+        // If the key is not found, throw an exception
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ConfigurationKeyNotFoundException("The NuGet template path key is not registered in the configuration.");
         }
         return value;
     }

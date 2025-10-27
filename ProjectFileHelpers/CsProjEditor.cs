@@ -379,6 +379,60 @@ public class CsProjEditor(string csprojPath)
 
         return true; // Successfully added the PostBuild command
     }
+    /// <summary>
+    /// Ensures that a custom <Target> entry exists in the specified .csproj file.
+    /// If not found, adds it before saving.
+    /// </summary>
+    /// <param name="targetName">The name of the Target, e.g. "RunImageEmbedder".</param>
+    /// <param name="command">The command line to run inside Exec.</param>
+    /// <param name="beforeTargets">When to run (default = "BeforeBuild").</param>
+    public void EnsureCustomTarget(
+        string targetName,
+        string command,
+        string beforeTargets = "BeforeBuild")
+    {
+        if (string.IsNullOrWhiteSpace(targetName))
+        {
+            throw new ArgumentException("Target name must be provided.", nameof(targetName));
+        }
+
+        if (string.IsNullOrWhiteSpace(command))
+        {
+            throw new ArgumentException("Command must be provided.", nameof(command));
+        }
+        if (!CanGetRoot())
+        {
+            throw new CustomBasicException("Unable to get root");
+        }
+        //XDocument doc = XDocument.Load(csprojPath, LoadOptions.PreserveWhitespace);
+        //XNamespace ns = doc.Root?.Name.Namespace ?? "";
+
+        // Check if target with this name already exists
+        bool hasTarget = _root!.Descendants("Target")
+            .Any(t => (string)t.Attribute("Name")! == targetName);
+
+        if (hasTarget)
+        {
+            //Console.WriteLine($"Target '{targetName}' already exists in: {Path.GetFileName(csprojPath)}");
+            return;
+        }
+
+        // Create new Target element
+        var targetElement = new XElement("Target",
+            new XAttribute("Name", targetName),
+            new XAttribute("BeforeTargets", beforeTargets),
+            new XElement("Exec",
+                new XAttribute("Command", command),
+                new XAttribute("ContinueOnError", "true")
+            )
+        );
+        _root.Add(targetElement); //i think.
+        _anyUpdate = true;
+        //doc.Root?.Add(targetElement);
+        //doc.Save(csprojPath);
+
+        //Console.WriteLine($"Added target '{targetName}' to: {Path.GetFileName(csprojPath)}");
+    }
     public void AddAsTool(string toolName)
     {
         if (!CanGetRoot())
