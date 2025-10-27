@@ -34,6 +34,15 @@ public class FileTemplatesContext : ITemplatesContext
         // Save the updated list back to the file
         await jj1.SaveObjectAsync(_packagePath, _list);
     }
+
+    Task ITemplatesContext.UpdateTemplateStampAsync(string templateName)
+    {
+        var package = _list.SingleOrDefault(x => x.PackageName == templateName)
+            ?? throw new InvalidOperationException($"Template '{templateName}' not found.");
+        package.LastUpdated = DateTime.Now; // Update the timestamp.
+        return jj1.SaveObjectAsync(_packagePath, _list); // Save the updated list.
+    }
+
     async Task ITemplatesContext.UpdateTemplateVersionAsync(string templateName, string version)
     {
         if (string.IsNullOrEmpty(version))
