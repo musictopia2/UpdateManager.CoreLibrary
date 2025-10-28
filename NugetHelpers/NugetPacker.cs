@@ -103,12 +103,15 @@ public class NugetPacker : INugetPacker, INugetTemplatePacker
         Console.WriteLine($"Creating Package For {template.Directory}");
         try
         {
-            await ff1.DeleteSeveralFilesAsync(template.NugetPackagePath, ".nupkg");
-            string arguments = $"nuget pack {template.PackageName}.nuspec -OutputDirectory ./nupkg";
+            if (ff1.DirectoryExists(template.NugetPackagePath))
+            {
+                await ff1.DeleteSeveralFilesAsync(template.NugetPackagePath, ".nupkg");
+            }
+            string arguments = $"pack {template.PackageName}.nuspec -OutputDirectory ./nupkg";
             //this means the nuget folder will be in the /nupkg subfolder of the project directory.
             var startInfo = new ProcessStartInfo
             {
-                FileName = "dotnet",
+                FileName = "nuget",
                 Arguments = arguments,  // Using the full path to the .csproj file
                 WorkingDirectory = template.Directory,  // Ensure we are in the correct directory
                 RedirectStandardOutput = true,
