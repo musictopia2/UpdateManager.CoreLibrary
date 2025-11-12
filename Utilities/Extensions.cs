@@ -218,5 +218,19 @@ public static class Extensions
         // Return in major.0.minor format
         return $"{major}.0.{minor}";
     }
+    public static string StartMajorVersion(this string version)
+    {
 
+        var versionParts = version.Split('.');
+        // Ensure that the version has at least 2 parts (major.minor format)
+        if (versionParts.Length < 2)
+        {
+            throw new CustomBasicException("Invalid version format. Version should have at least 'major.minor' format.");
+        }
+        // Extract major version (the first part)
+        int major = int.Parse(versionParts[0]);
+
+        return $"{major}.0.0"; //try this way.   since i am forced to make this build, then just make this .0.0 and when the build happens, will increment by one properly.
+        //this means go ahead and let the normal builds happen anyways.
+    }
 }
