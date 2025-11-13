@@ -80,15 +80,36 @@ public class CsProjEditor(string csprojPath)
         {
             throw new CustomBasicException("Cannot get root");
         }
+
+        // Check UseWPF or UseWindowsForms elements first
         var wpfElement = _root!.Descendants("UseWPF").FirstOrDefault();
-        if (wpfElement is null)
-        {
-            return false;
-        }
-        if (wpfElement.Value == "true")
+        var formElement = _root.Descendants("UseWindowsForms").FirstOrDefault();
+
+        if (formElement?.Value.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
         {
             return true;
         }
+
+        if (wpfElement?.Value.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return true;
+        }
+
+        // Check TargetFramework and TargetFrameworks for "-windows"
+        var tfElement = _root.Descendants("TargetFramework").FirstOrDefault();
+        var tfsElement = _root.Descendants("TargetFrameworks").FirstOrDefault();
+
+        string? frameworks = tfElement?.Value ?? tfsElement?.Value;
+        if (!string.IsNullOrWhiteSpace(frameworks))
+        {
+            // Some projects target multiple frameworks like "net9.0;net9.0-windows"
+            var allFrameworks = frameworks.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            if (allFrameworks.Any(f => f.Contains("-windows", StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+        }
+
         return false;
     }
     public bool UpdateNetVersion(string newNetVersion)
@@ -99,11 +120,12 @@ public class CsProjEditor(string csprojPath)
         }
         //net9.0-windows
         // Check if the application is a Windows app by looking for OutputType=WinExe
-        var wpfElement = _root!.Descendants("UseWPF").FirstOrDefault();
-        if (wpfElement != null && wpfElement.Value.Equals("true", StringComparison.OrdinalIgnoreCase))
+        //var wpfElement = _root!.Descendants("UseWPF").FirstOrDefault();
+        bool isWindows = IsWindows();
+        if (isWindows)
         {
             // If it's a Windows app (WinExe), update the version in the format: Windows[version]net
-            var targetFrameworkElement = _root.Descendants("TargetFramework").FirstOrDefault();
+            var targetFrameworkElement = _root!.Descendants("TargetFramework").FirstOrDefault();
             if (targetFrameworkElement != null)
             {
                 string originalValue = targetFrameworkElement.Value;
