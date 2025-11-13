@@ -200,6 +200,18 @@ public class CsProjEditor(string csprojPath)
                 {
                     return false; // Every dependency must have a version
                 }
+
+                if (ExcludedDependencies.ForcedVersions.TryGetValue(packageName, out string? forcedVersion))
+                {
+                    if (string.Equals(currentVersion, forcedVersion, StringComparison.OrdinalIgnoreCase) == false)
+                    {
+                        packageReference.SetAttributeValue("Version", forcedVersion);
+                        _anyUpdate = true;
+                    }
+                    continue; // Skip all other update logic for forced-version packages
+                }
+
+
                 // Skip if PrivateAssets="all"
                 //can't skip privateassets since there is something in webassembly that needs it.
 
