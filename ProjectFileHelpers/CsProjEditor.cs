@@ -190,7 +190,11 @@ public class CsProjEditor(string csprojPath)
             var packageReferences = itemGroup.Descendants("PackageReference").ToList();
             foreach (var packageReference in packageReferences)
             {
-                string packageName = packageReference.Attribute("Include")?.Value!;
+                string? packageName = packageReference.Attribute("Include")?.Value;
+                if (packageName is null)
+                {
+                    continue; //this is another way of doing maui stuff now.
+                }
                 string currentVersion = packageReference.Attribute("Version")?.Value!;
                 if (currentVersion.Equals("$(mauiVersion)", StringComparison.InvariantCultureIgnoreCase))
                 {
