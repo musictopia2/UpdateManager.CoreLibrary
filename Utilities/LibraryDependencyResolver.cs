@@ -1,5 +1,6 @@
 ﻿namespace UpdateManager.CoreLibrary.Utilities;
-internal static class LibraryDependencyResolver<T>
+//decided to make this public so 2 different libraries can use this.
+public static class LibraryDependencyResolver<T>
     where T : ILibraryUpgradeModel, new()
 {
     public static BasicList<T> ResolveDependencies(BasicList<T> libraries)
