@@ -2,7 +2,7 @@
 public class FileUploadedPackagesStorage : IUploadedPackagesStorage
 {
     private BasicList<UploadedPackageModel> _list = [];
-    private readonly string _uploadedPath = bb1.Configuration!.GetUploadedPackagesStoragePathFromConfig();
+    private readonly string _uploadedPath = bb1.Configuration!.UploadedPackagesStoragePathFromConfig;
     async Task IUploadedPackagesStorage.AddUploadedPackageAsync(UploadedPackageModel package)
     {
         _list.Add(package);

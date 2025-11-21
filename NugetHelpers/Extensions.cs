@@ -1,9 +1,12 @@
 ﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
 public static class Extensions
 {
-    public static async Task<string> GetNugetFileAsync(this string nugetPath)
+    extension(string nugetPath)
     {
-        string filePath = await ff1.GetSpecificFileAsync(nugetPath, ".nupkg");
-        return filePath;
-    }
+        public async Task<string> GetNugetFileAsync()
+        {
+            string filePath = await ff1.GetSpecificFileAsync(nugetPath, ".nupkg");
+            return filePath;
+        }
+    }  
 }

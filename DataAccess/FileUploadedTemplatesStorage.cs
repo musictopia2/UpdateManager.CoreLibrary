@@ -2,7 +2,7 @@
 public class FileUploadedTemplatesStorage : IUploadedTemplatesStorage
 {
     private BasicList<UploadTemplateModel> _list = [];
-    private readonly string _uploadedPath = bb1.Configuration!.GetUploadedTemplatesStoragePathFromConfig();
+    private readonly string _uploadedPath = bb1.Configuration!.UploadedTemplatesStoragePathFromConfig;
     private async Task SaveAsync()
     {
         try

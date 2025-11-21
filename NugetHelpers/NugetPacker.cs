@@ -22,7 +22,7 @@ public class NugetPacker : INugetPacker, INugetTemplatePacker
             }
 
             // Determine the correct PackageId (use PrefixForPackageName + PackageName if PrefixForPackageName is provided)
-            string packageId = project.GetPackageID();
+            string packageId = project.PackageID;
             
             // Construct the full command with the .csproj path, other arguments, and the custom PackageId if provided
             string arguments = $"pack \"{project.CsProjPath}\" -c release {extras} -p:PackageVersion={project.Version} -p:PackageId={packageId}";
@@ -79,7 +79,7 @@ public class NugetPacker : INugetPacker, INugetTemplatePacker
 
     public async Task<bool> CreateNugetTemplatePackageAsync(NuGetTemplateModel template, CancellationToken cancellationToken = default)
     {
-        string packageId = template.GetPackageID();
+        string packageId = template.PackageID;
         Console.WriteLine($"Creating .nuspec For {template.Directory}");
         string details = $"""
             <package>

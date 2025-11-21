@@ -2,7 +2,7 @@
 public class FileUploadedToolsStorage : IUploadedToolsStorage
 {
     private BasicList<UploadToolModel> _list = [];
-    private readonly string _uploadedPath = bb1.Configuration!.GetUploadedToolsStoragePathFromConfig();
+    private readonly string _uploadedPath = bb1.Configuration!.UploadedToolsStoragePathFromConfig;
     private async Task SaveAsync()
     {
         try

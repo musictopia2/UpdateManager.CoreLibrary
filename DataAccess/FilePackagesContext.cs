@@ -1,7 +1,7 @@
 ﻿namespace UpdateManager.CoreLibrary.DataAccess;
 public class FilePackagesContext : IPackagesContext
 {
-    readonly string _packagePath = bb1.Configuration!.GetRequiredNuGetPackagesPath();
+    readonly string _packagePath = bb1.Configuration!.RequiredNuGetPackagesPath;
     private BasicList<NuGetPackageModel> _list = [];
     async Task IPackagesContext.AddPackageAsync(NuGetPackageModel package)
     {

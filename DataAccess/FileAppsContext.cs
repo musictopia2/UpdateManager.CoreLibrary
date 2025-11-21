@@ -1,7 +1,7 @@
 ﻿namespace UpdateManager.CoreLibrary.DataAccess;
 public class FileAppsContext : IAppsContext
 {
-    readonly string _appsPath = bb1.Configuration!.GetRequiredAppPackagesPath();
+    readonly string _appsPath = bb1.Configuration!.RequiredAppPackagesPath;
     private BasicList<AppModel> _list = [];
     async Task IAppsContext.AddAppAsync(AppModel app)
     {

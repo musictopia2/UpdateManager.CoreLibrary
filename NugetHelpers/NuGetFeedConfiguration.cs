@@ -4,7 +4,7 @@ public static class NuGetFeedConfiguration
     // Private helper method to load the NuGet config file
     private static XDocument LoadNuGetConfig()
     {
-        string nugetConfigPath = bb1.Configuration!.GetNugetConfigPath();
+        string nugetConfigPath = bb1.Configuration!.NugetConfigPath;
         if (!File.Exists(nugetConfigPath))
         {
             throw new CustomBasicException("NuGet feed config file does not exist.");
@@ -51,7 +51,7 @@ public static class NuGetFeedConfiguration
                 }
 
                 packageSources.AddFirst(newFeedElement);  // Insert at the top (highest priority)
-                config.Save(bb1.Configuration!.GetNugetConfigPath());
+                config.Save(bb1.Configuration!.NugetConfigPath);
                 return true;  // Feed successfully added
             }
         }
@@ -80,7 +80,7 @@ public static class NuGetFeedConfiguration
 
                 // Remove the feed if it's not permanent
                 feedToRemove.Remove();
-                config.Save(bb1.Configuration!.GetNugetConfigPath());
+                config.Save(bb1.Configuration!.NugetConfigPath);
                 return true;  // Feed successfully removed
             }
         }

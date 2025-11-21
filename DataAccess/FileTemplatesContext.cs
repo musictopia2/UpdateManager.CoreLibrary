@@ -1,7 +1,7 @@
 ﻿namespace UpdateManager.CoreLibrary.DataAccess;
 public class FileTemplatesContext : ITemplatesContext
 {
-    readonly string _packagePath = bb1.Configuration!.GetRequiredNuGetTemplatePath();
+    readonly string _packagePath = bb1.Configuration!.RequiredNuGetTemplatePath;
     private BasicList<NuGetTemplateModel> _list = [];
     async Task ITemplatesContext.AddTemplateAsync(NuGetTemplateModel template)
     {

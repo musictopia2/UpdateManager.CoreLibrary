@@ -1,7 +1,7 @@
 ﻿namespace UpdateManager.CoreLibrary.DataAccess;
 public class FileToolsContext : IToolsContext
 {
-    readonly string _packagePath = bb1.Configuration!.GetRequiredNuGetToolPath();
+    readonly string _packagePath = bb1.Configuration!.RequiredNuGetToolPath;
     private BasicList<NuGetToolModel> _list = [];
     async Task IToolsContext.AddToolAsync(NuGetToolModel tool)
     {
