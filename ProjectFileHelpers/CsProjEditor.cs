@@ -340,7 +340,7 @@ public class CsProjEditor(string csprojPath)
         }
 
         // Define the PostBuild target with the necessary command
-        string netVersion = bb1.Configuration!.GetNetVersion();  // Assuming this method gives the correct .NET version
+        string netVersion = bb1.Configuration!.NetVersion;  // Assuming this method gives the correct .NET version
         string fullPath = Path.Combine(programDirectory, "bin", "Release", $"net{netVersion}.0");
         string programName = ff1.FileName(programDirectory); // Assuming this gets the program's filename
         string programPath = Path.Combine(fullPath, $"{programName}.exe");
