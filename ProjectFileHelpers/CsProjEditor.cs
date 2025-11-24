@@ -129,7 +129,7 @@ public class CsProjEditor(string csprojPath)
             if (targetFrameworkElement != null)
             {
                 string originalValue = targetFrameworkElement.Value;
-                string newValue = $"net{newNetVersion}.0-windows";  // For Windows apps, use the new format
+                string newValue = $"net{newNetVersion}.0-windows10.0.17763.0";  // For Windows apps, use the new format
                                                                    // Update the version if it is different
                 if (!originalValue.Equals(newValue, StringComparison.OrdinalIgnoreCase))
                 {
