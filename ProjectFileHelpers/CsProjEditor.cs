@@ -2,7 +2,10 @@
 public class CsProjEditor(string csprojPath)
 {
     private readonly XDocument _csProjDoc = XDocument.Load(csprojPath);
-    private bool _anyUpdate = false;  // This is now private
+
+    public bool AnyUpdate { get; private set; }
+
+    //private bool _anyUpdate = false;  // This is now private
     private XElement? _root;
     private bool CanGetRoot()
     {
@@ -43,7 +46,7 @@ public class CsProjEditor(string csprojPath)
         }
 
         // Mark that the file has been modified
-        _anyUpdate = true;
+        AnyUpdate = true;
         return true;
     }
     // Method to get the current FeedType (Local or Public) from the .csproj
@@ -134,7 +137,7 @@ public class CsProjEditor(string csprojPath)
                 if (!originalValue.Equals(newValue, StringComparison.OrdinalIgnoreCase))
                 {
                     targetFrameworkElement.Value = newValue;
-                    _anyUpdate = true;
+                    AnyUpdate = true;
                 }
                 return true;
             }
@@ -159,7 +162,7 @@ public class CsProjEditor(string csprojPath)
                 if (!originalValue.Equals(newValue, StringComparison.OrdinalIgnoreCase))
                 {
                     targetFrameworkElement.Value = newValue;
-                    _anyUpdate = true;
+                    AnyUpdate = true;
                 }
                 return true;
             }
@@ -195,6 +198,13 @@ public class CsProjEditor(string csprojPath)
                 {
                     continue; //this is another way of doing maui stuff now.
                 }
+
+                if (ExcludedDependencies.PackageSkipRule != null &&
+                    ExcludedDependencies.PackageSkipRule(csprojPath, packageName))
+                {
+                    continue; // leave version as-is, skip updating this dependency
+                }
+
                 string currentVersion = packageReference.Attribute("Version")?.Value!;
                 if (currentVersion.Equals("$(mauiVersion)", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -210,7 +220,7 @@ public class CsProjEditor(string csprojPath)
                     if (string.Equals(currentVersion, forcedVersion, StringComparison.OrdinalIgnoreCase) == false)
                     {
                         packageReference.SetAttributeValue("Version", forcedVersion);
-                        _anyUpdate = true;
+                        AnyUpdate = true;
                     }
                     continue; // Skip all other update logic for forced-version packages
                 }
@@ -237,9 +247,13 @@ public class CsProjEditor(string csprojPath)
                     {
                         return false; // Package version cannot be blank
                     }
-
+                    string oldVersion = packageReference.Attribute("Version")!.Value;
+                    if (oldVersion == customLibrary.Version)
+                    {
+                        continue; //because it already matches.   make it smart enough so if no changes, then no need to do a build (helpful for doing improved updates).
+                    }
                     packageReference.SetAttributeValue("Version", customLibrary.Version);
-                    _anyUpdate = true;
+                    AnyUpdate = true;
                     continue; // Skip the public version check for custom packages
                 }
 
@@ -269,7 +283,7 @@ public class CsProjEditor(string csprojPath)
                 {
                     // Update the package reference to the latest version
                     packageReference.SetAttributeValue("Version", latestVersion);
-                    _anyUpdate = true;
+                    AnyUpdate = true;
                 }
             }
         }
@@ -294,7 +308,7 @@ public class CsProjEditor(string csprojPath)
         {
             return false;
         }
-
+        bool hadPostBuild = false;
         // Find and remove the PostBuild target (if it exists)
         var postBuildTarget = _root!.Descendants("Target")
             .FirstOrDefault(t => t.Attribute("Name")?.Value == "PostBuild");
@@ -302,7 +316,8 @@ public class CsProjEditor(string csprojPath)
         if (postBuildTarget != null)
         {
             postBuildTarget.Remove();
-            _anyUpdate = true;
+            AnyUpdate = true;
+            hadPostBuild = true;
         }
 
 
@@ -315,14 +330,12 @@ public class CsProjEditor(string csprojPath)
             if (runPostBuildCondition != null)
             {
                 runPostBuildCondition.Remove();
-                _anyUpdate = true;
+                AnyUpdate = true;
+                hadPostBuild = true;
             }
 
         }
-
-
-        // If anything was updated, return true, indicating that changes were made
-        return _anyUpdate;
+        return hadPostBuild;
     }
     public bool AddPostBuildCommand(string programDirectory, bool allowSkipBuild)
     {
@@ -417,7 +430,7 @@ public class CsProjEditor(string csprojPath)
         _root.Add(postBuildTarget);
 
         // Mark that an update was made
-        _anyUpdate = true;
+        AnyUpdate = true;
 
         return true; // Successfully added the PostBuild command
     }
@@ -469,7 +482,7 @@ public class CsProjEditor(string csprojPath)
             )
         );
         _root.Add(targetElement); //i think.
-        _anyUpdate = true;
+        AnyUpdate = true;
         //doc.Root?.Add(targetElement);
         //doc.Save(csprojPath);
 
@@ -503,7 +516,7 @@ public class CsProjEditor(string csprojPath)
         AddOrUpdateElement("PackAsTool", "true");
         if (updated)
         {
-            _anyUpdate = true;
+            AnyUpdate = true;
         }
     }
     public string VersionUsed()
@@ -582,7 +595,7 @@ public class CsProjEditor(string csprojPath)
                 string updatedCommand = originalCommand.Replace(oldVersion, newVersion);
                 updatedCommand = updatedCommand.Replace("&#xD;&#xA;", "");
                 execElement.SetAttributeValue("Command", updatedCommand);
-                _anyUpdate = true;
+                AnyUpdate = true;
                 return true;
             }
         }
@@ -705,7 +718,7 @@ public class CsProjEditor(string csprojPath)
         // If any updates were made, mark the change
         if (anyUpdate)
         {
-            _anyUpdate = true;
+            AnyUpdate = true;
         }
 
         return anyUpdate;
@@ -739,7 +752,7 @@ public class CsProjEditor(string csprojPath)
         // If any ProjectReferences were removed, mark the change
         if (anyUpdate)
         {
-            _anyUpdate = true;
+            AnyUpdate = true;
         }
 
         return anyUpdate;
@@ -821,7 +834,7 @@ public class CsProjEditor(string csprojPath)
         // Step 5: If any update was made, mark _anyUpdate to true
         if (updated)
         {
-            _anyUpdate = true;
+            AnyUpdate = true;
         }
 
         return updated;
@@ -843,12 +856,12 @@ public class CsProjEditor(string csprojPath)
         // If the package is not found, you can handle this based on your needs.
         return string.Empty;
     }
-
+    
 
     // Saves the updated csproj file if any changes have been made
     public void SaveChanges()
     {
-        if (_anyUpdate)
+        if (AnyUpdate)
         {
             _csProjDoc.Save(csprojPath);
         }
