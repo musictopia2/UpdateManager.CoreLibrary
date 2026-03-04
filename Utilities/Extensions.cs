@@ -224,7 +224,38 @@ public static class Extensions
                 }
                 return value;
             }
-        }  
+        }
+        public string RequiredNuGetExperimentPath
+        {
+            get
+            {
+                // Check if the configuration key is found
+                var value = configuration[UpdateSystemConfigurationKeys.CustomExperimentInfoKey];
+
+                // If the key is not found, throw an exception
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new ConfigurationKeyNotFoundException("The NuGet experiment path key is not registered in the configuration.");
+                }
+                return value;
+            }
+        }
+
+        public string ExperimentPostBuildFeedProcessorProgram
+        {
+            get
+            {
+                var value = configuration[UpdateSystemConfigurationKeys.PostBuildFeedProcessorKey_Experiments];
+
+                // If the key is not found, throw an exception
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new ConfigurationKeyNotFoundException("The experiment post-build processor is not registered in the configuration.");
+                }
+
+                return value;
+            }
+        }
     }
     extension (string version)
     {
