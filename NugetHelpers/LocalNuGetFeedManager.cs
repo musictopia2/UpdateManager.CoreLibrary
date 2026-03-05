@@ -1,9 +1,12 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
 
-namespace UpdateManager.CoreLibrary.NugetHelpers;
 public static class LocalNuGetFeedManager
 {
     // Check if the package exists in the feed
+
+    public static INugetMirror? PrivateMirror { get; set; } = null;
+    public static INugetMirror? DevelopmentMirror { get; set; } = null;
+    public static INugetMirror? StagingMirror { get; set; } = null;
     public static async Task<bool> PackageExistsAsync(string feedUrl, string packageName, CancellationToken cancellationToken = default)
     {
         try
