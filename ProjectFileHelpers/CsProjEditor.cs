@@ -337,7 +337,7 @@ public class CsProjEditor(string csprojPath)
         }
         return hadPostBuild;
     }
-    public bool AddPostBuildCommand(string programDirectory, bool allowSkipBuild)
+    public bool AddPostBuildCommand(string programDirectoryOrToolCommand, bool allowSkipBuild, bool includeOutputDir = true)
     {
         // Check if the root of the XML document exists
         if (!CanGetRoot())
@@ -356,30 +356,17 @@ public class CsProjEditor(string csprojPath)
             return false;
         }
 
-        // Define the PostBuild target with the necessary command
-        string netVersion = bb1.Configuration!.NetVersion;  // Assuming this method gives the correct .NET version
-        string fullPath = Path.Combine(programDirectory, "bin", "Release", $"net{netVersion}.0");
-        string programName = ff1.FileName(programDirectory); // Assuming this gets the program's filename
-        string programPath = Path.Combine(fullPath, $"{programName}.exe");
-
-        // Ensure the program file exists
-        if (!ff1.FileExists(programPath))
-        {
-            throw new CustomBasicException($"Path to the program {programPath} not found.");
-        }
-
         // Ensure the PropertyGroup element exists
-        XElement propertyGroup = _root.Descendants("PropertyGroup").FirstOrDefault()!;
+        XElement? propertyGroup = _root.Descendants("PropertyGroup").FirstOrDefault();
         if (propertyGroup == null)
         {
             propertyGroup = new XElement("PropertyGroup");
-            _root.Add(propertyGroup);  // Add a PropertyGroup if it doesn't exist
+            _root.Add(propertyGroup);
         }
 
         // Add the RunPostBuildAppCondition property if SkipPostBuild is true
         if (allowSkipBuild)
         {
-            // Only add this condition if it does not already exist
             var runPostBuildCondition = propertyGroup.Descendants("RunPostBuildAppCondition").FirstOrDefault();
             if (runPostBuildCondition == null)
             {
@@ -388,51 +375,98 @@ public class CsProjEditor(string csprojPath)
             }
         }
 
-        // Create a function to wrap paths in quotes if they contain spaces
+        // Wrap paths/args that contain spaces
         static string WrapInQuotesIfNeeded(string argument)
+            => argument.Contains(' ') ? $"\"{argument}\"" : argument;
+
+        // ---- Decide if this is a TOOL command or a DIRECTORY path ----
+        static bool LooksLikePathOrDirectory(string value)
         {
-            return argument.Contains(' ') ? $"\"{argument}\"" : argument;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            // Rooted covers C:\... and \\server\share\...
+            if (Path.IsPathRooted(value))
+            {
+                return true;
+            }
+
+            // Covers relative paths like Tools\PostBuildToolHandler
+            return value.Contains(Path.DirectorySeparatorChar) ||
+                   value.Contains(Path.AltDirectorySeparatorChar);
         }
 
-        // Build the Exec command for the PostBuild process
-        string execCommand = $"{WrapInQuotesIfNeeded(programPath)} " +
-                             $"{WrapInQuotesIfNeeded("$(ProjectName)")} " +
-                             $"{WrapInQuotesIfNeeded("$(ProjectDir)")} " +
-                             $"{WrapInQuotesIfNeeded("$(ProjectFileName)")} " +
-                             $"{WrapInQuotesIfNeeded("$(TargetDir)")}";
+        string invokerValue = programDirectoryOrToolCommand.Trim();
 
+        // Build the macro args (3 or 4)
+        string macroArgs = includeOutputDir
+            ? $"{WrapInQuotesIfNeeded("$(ProjectName)")} " +
+              $"{WrapInQuotesIfNeeded("$(ProjectDir)")} " +
+              $"{WrapInQuotesIfNeeded("$(ProjectFileName)")} " +
+              $"{WrapInQuotesIfNeeded("$(TargetDir)")}"
+            : $"{WrapInQuotesIfNeeded("$(ProjectName)")} " +
+              $"{WrapInQuotesIfNeeded("$(ProjectDir)")} " +
+              $"{WrapInQuotesIfNeeded("$(ProjectFileName)")}";
+
+        string execCommand;
+
+        if (LooksLikePathOrDirectory(invokerValue))
+        {
+            // DIRECTORY mode (legacy behavior): derive exe path from directory + net version
+            CustomBasicException.ThrowIfNull(bb1.Configuration);
+
+            string netVersion = bb1.Configuration!.NetVersion;
+            string fullPath = Path.Combine(invokerValue, "bin", "Release", $"net{netVersion}.0");
+
+            string programName = ff1.FileName(invokerValue); // directory name
+            string programPath = Path.Combine(fullPath, $"{programName}.exe");
+
+            if (!ff1.FileExists(programPath))
+            {
+                // Helpful message explaining *why* it failed
+                throw new CustomBasicException(
+                    $"Path to the program {programPath} not found. " +
+                    $"Configured value looked like a directory: '{invokerValue}'. " +
+                    $"NetVersion was '{netVersion}'.");
+            }
+
+            execCommand = $"{WrapInQuotesIfNeeded(programPath)} {macroArgs}";
+        }
+        else
+        {
+            // TOOL mode: invoke by command name (global tool on PATH)
+            // If you prefer local tool manifest usage, swap this line to:
+            // execCommand = $"dotnet tool run {invokerValue} -- {macroArgs}";
+            execCommand = $"{WrapInQuotesIfNeeded(invokerValue)} {macroArgs}";
+        }
 
         // Create the PostBuild target element
         XElement postBuildTarget;
 
-        // For allowSkipBuild == true, we include the condition checking for the skip flag
         if (allowSkipBuild)
         {
             postBuildTarget = new XElement("Target",
-            new XAttribute("Name", "PostBuild"),
-            new XAttribute("AfterTargets", "PostBuildEvent"),
-            new XElement("Exec",
-                new XAttribute("Command", execCommand),
-                new XAttribute("Condition", "'$(Configuration)' == 'Release' and '$(RunPostBuildAppCondition)' == 'true'")));
+                new XAttribute("Name", "PostBuild"),
+                new XAttribute("AfterTargets", "PostBuildEvent"),
+                new XElement("Exec",
+                    new XAttribute("Command", execCommand),
+                    new XAttribute("Condition", "'$(Configuration)' == 'Release' and '$(RunPostBuildAppCondition)' == 'true'")));
         }
         else
         {
             postBuildTarget = new XElement("Target",
-            new XAttribute("Name", "PostBuild"),
-            new XAttribute("AfterTargets", "PostBuildEvent"),
-            new XElement("Exec",
-            new XAttribute("Command", execCommand),
-            new XAttribute("Condition", "'$(Configuration)' == 'Release'")
-            ));
+                new XAttribute("Name", "PostBuild"),
+                new XAttribute("AfterTargets", "PostBuildEvent"),
+                new XElement("Exec",
+                    new XAttribute("Command", execCommand),
+                    new XAttribute("Condition", "'$(Configuration)' == 'Release'")));
         }
 
-        // Add the new PostBuild target to the root element of the .csproj
         _root.Add(postBuildTarget);
-
-        // Mark that an update was made
         AnyUpdate = true;
-
-        return true; // Successfully added the PostBuild command
+        return true;
     }
     /// <summary>
     /// Ensures that a custom <Target> entry exists in the specified .csproj file.
@@ -856,7 +890,77 @@ public class CsProjEditor(string csprojPath)
         // If the package is not found, you can handle this based on your needs.
         return string.Empty;
     }
-    
+
+
+    public bool IsLibraryProject()
+    {
+        if (!CanGetRoot())
+        {
+            return false;
+        }
+
+        // SDK-style projects: if OutputType is absent, default is usually "Library"
+        // But we still want to be strict: if OutputType exists and is Exe/WinExe, it's not a library.
+
+        var outputType = _root!.Descendants("PropertyGroup")
+            .Elements("OutputType")
+            .Select(x => x.Value?.Trim())
+            .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+        if (!string.IsNullOrWhiteSpace(outputType))
+        {
+            // Common non-library outputs
+            if (outputType.Equals("Exe", StringComparison.OrdinalIgnoreCase) ||
+                outputType.Equals("WinExe", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
+        // If it's explicitly a tool, it still packs as a NuGet, but it's not a "class library" in your sense.
+        // If you want tools allowed, delete this block.
+        var packAsTool = _root.Descendants("PropertyGroup")
+            .Elements("PackAsTool")
+            .Select(x => x.Value?.Trim())
+            .FirstOrDefault();
+
+        if (packAsTool?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return false;
+        }
+
+        // Exclude test projects if you want (optional).
+        // Many test projects are still libraries, but your experiment system may not want them.
+        var isTestProject = _root.Descendants("PropertyGroup")
+            .Elements("IsTestProject")
+            .Select(x => x.Value?.Trim())
+            .FirstOrDefault();
+
+        if (isTestProject?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return false;
+        }
+
+        // If it’s not explicitly an exe/winexe/tool/test, treat it as library-supported.
+        return true;
+    }
+
+    /// <summary>
+    /// Returns true if a PostBuild <Target Name="PostBuild"> exists.
+    /// This is the simplest "already has post build" gate.
+    /// </summary>
+    public bool HasPostBuildTarget()
+    {
+        if (!CanGetRoot())
+        {
+            return false;
+        }
+
+        return _root!.Descendants("Target")
+            .Any(t => string.Equals((string?)t.Attribute("Name"), "PostBuild", StringComparison.OrdinalIgnoreCase));
+    }
+
+
 
     // Saves the updated csproj file if any changes have been made
     public void SaveChanges()
