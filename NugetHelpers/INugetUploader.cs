@@ -1,5 +1,10 @@
 ﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
+
 public interface INugetUploader
 {
-    Task<bool> UploadNugetPackageAsync(string nugetFile, CancellationToken cancellationToken = default); //this means there can even be a private version of this.
+    Task<bool> UploadNugetPackageAsync(
+        string nugetFilePath,
+        string packageId,
+        string packageVersion,
+        CancellationToken cancellationToken = default);
 }

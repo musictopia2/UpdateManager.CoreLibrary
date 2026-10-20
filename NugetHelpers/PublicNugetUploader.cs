@@ -1,10 +1,12 @@
 ﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
+
 public class PublicNugetUploader : INugetUploader
 {
     private static IConfiguration Configuration => bb1.Configuration!;
 
     // Async method to upload the NuGet package with cancellation support
-    public async Task<bool> UploadNugetPackageAsync(string nugetFilePath, CancellationToken cancellationToken = default)
+    public async Task<bool> UploadNugetPackageAsync(string nugetFilePath, string packageId,
+        string packageVersion, CancellationToken cancellationToken = default)
     {
         // Make sure the provided file exists
         if (ff1.FileExists(nugetFilePath) == false)
