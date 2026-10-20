@@ -13,3 +13,4 @@ global using CommonBasicLibraries.BasicDataSettingsAndProcesses;
 global using CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.BasicExtensions;
 global using UpdateManager.CoreLibrary.ProjectFileHelpers;
 global using CommonBasicLibraries.AdvancedGeneralFunctionsAndProcesses.IConfigurationHelpers;
+global using Microsoft.Extensions.DependencyInjection;

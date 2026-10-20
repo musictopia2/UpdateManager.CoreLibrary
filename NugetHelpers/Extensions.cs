@@ -1,6 +1,16 @@
 ﻿namespace UpdateManager.CoreLibrary.NugetHelpers;
 public static class Extensions
 {
+    extension (IServiceCollection services)
+    {
+        public IServiceCollection RegisterNugetUploader<TUploader>(Action<IServiceCollection> actions)
+            where TUploader : class, INugetUploader
+        {
+            services.AddSingleton<INugetUploader, TUploader>();
+            actions?.Invoke(services);
+            return services;
+        }
+    }
     extension(string nugetPath)
     {
         public async Task<string> GetNugetFileAsync()
