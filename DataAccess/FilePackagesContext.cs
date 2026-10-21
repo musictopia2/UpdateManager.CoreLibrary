@@ -1,4 +1,6 @@
-﻿namespace UpdateManager.CoreLibrary.DataAccess;
+﻿using System.Text;
+
+namespace UpdateManager.CoreLibrary.DataAccess;
 public class FilePackagesContext : IPackagesContext
 {
     readonly string _packagePath = bb1.Configuration!.RequiredNuGetPackagesPath;
@@ -31,7 +33,7 @@ public class FilePackagesContext : IPackagesContext
         package.Framework = updatedPackage.Framework;
         package.NugetPackagePath = updatedPackage.NugetPackagePath;
         package.IsExcluded = updatedPackage.IsExcluded;
-
+        package.RequiredBy = updatedPackage.RequiredBy;
         // Save the updated list back to the file
         await jj1.SaveObjectAsync(_packagePath, _list);
     }

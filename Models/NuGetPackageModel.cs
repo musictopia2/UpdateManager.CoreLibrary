@@ -6,6 +6,7 @@ public class NuGetPackageModel : INugetModel
     public EnumTargetFramework Framework { get; set; } = EnumTargetFramework.NetRuntime;
     public string CsProjPath { get; set; } = ""; //i think this makes the most sense here.
     public string NugetPackagePath { get; set; } = "";
+    public string RequiredBy { get; set; } = "";
     public EnumFeedType FeedType { get; set; }
     /// <summary>
     /// Indicates whether the package should be excluded from processing in the current workflow.
