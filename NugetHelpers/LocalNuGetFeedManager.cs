@@ -3,10 +3,9 @@
 public static class LocalNuGetFeedManager
 {
     // Check if the package exists in the feed
-
-    public static INugetMirror? PrivateMirror { get; set; } = null;
-    public static INugetMirror? DevelopmentMirror { get; set; } = null;
-    public static INugetMirror? StagingMirror { get; set; } = null;
+    public static BasicList<INugetPackageMirror> PrivateMirrors { get; set; } = [];
+    public static BasicList<INugetPackageMirror> DevelopmentMirrors { get; set; } = [];
+    public static BasicList<INugetPackageMirror> StagingMirrors { get; set; } = [];
     public static async Task<bool> PackageExistsAsync(string feedUrl, string packageName, CancellationToken cancellationToken = default)
     {
         try
@@ -40,7 +39,78 @@ public static class LocalNuGetFeedManager
         }
     }
 
-    // Delete all versions of a package from the feed by deleting the package folder
+
+    public static async Task<bool> DeleteOtherPackageVersionsAsync(
+        string feedPath,
+        string packageId,
+        string packageVersion)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(feedPath) ||
+                string.IsNullOrWhiteSpace(packageId) ||
+                string.IsNullOrWhiteSpace(packageVersion))
+            {
+                Console.WriteLine("Feed path, package ID, and version are required.");
+                return false;
+            }
+
+            // Package ID already includes any prefix.
+            string packageFolder = Path.Combine(feedPath, packageId);
+
+            if (ff1.DirectoryExists(packageFolder) == false)
+            {
+                // No package folder means there are no old versions to delete.
+                return true;
+            }
+
+            // Never delete older versions unless the new version exists.
+            string keepFolder = Path.Combine(packageFolder, packageVersion);
+
+            if (ff1.DirectoryExists(keepFolder) == false)
+            {
+                Console.WriteLine(
+                    $"Version {packageVersion} was not found for {packageId}.");
+                return false;
+            }
+
+            // Capture all existing version folders before deleting anything.
+            string[] versionFolders = Directory.GetDirectories(packageFolder);
+
+            foreach (string versionFolder in versionFolders)
+            {
+                string version = Path.GetFileName(versionFolder);
+
+                // Keep the requested version.
+                if (version.Equals(
+                    packageVersion,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Only delete folders representing numeric versions.
+                if (Version.TryParse(version, out _) == false)
+                {
+                    continue;
+                }
+
+                await ff1.DeleteFolderAsync(versionFolder);
+
+                Console.WriteLine($"Deleted {packageId} version {version}");
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error deleting old versions of {packageId}: {ex.Message}");
+            return false;
+        }
+    }
+
+
     public static async Task<bool> DeletePackageFolderAsync(string feedPath, string packageName)
     {
         try

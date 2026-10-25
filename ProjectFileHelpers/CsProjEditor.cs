@@ -12,6 +12,144 @@ public class CsProjEditor(string csprojPath)
         _root = _csProjDoc.Root;
         return _root != null;
     }
+    public bool AddPostAppCommand(string processorDirectory)
+    {
+        if (!CanGetRoot())
+        {
+            return false;
+        }
+
+        const string targetName = "RunConfiguredAppPostBuild";
+        XNamespace ns = _root!.Name.Namespace;
+
+        var targets = _root.Elements(ns + "Target")
+            .Where(x => (string?)x.Attribute("Name") == targetName)
+            .ToList();
+
+        if (string.IsNullOrWhiteSpace(processorDirectory))
+        {
+            foreach (var target in targets)
+            {
+                target.Remove();
+            }
+
+            if (targets.Count > 0)
+            {
+                AnyUpdate = true;
+            }
+
+            return true;
+        }
+
+        XElement replacement = CreatePostAppTarget(processorDirectory);
+
+        if (targets.Count == 1 &&
+            XNode.DeepEquals(targets[0], replacement))
+        {
+            return true;
+        }
+
+        if (targets.Count == 0)
+        {
+            _root.Add(replacement);
+        }
+        else
+        {
+            targets[0].ReplaceWith(replacement);
+
+            foreach (var duplicate in targets.Skip(1))
+            {
+                duplicate.Remove();
+            }
+        }
+
+        AnyUpdate = true;
+        return true;
+    }
+    private XElement CreatePostAppTarget(string processorDirectory)
+    {
+        CustomBasicException.ThrowIfNull(bb1.Configuration);
+
+        string directory = Path.GetFullPath(
+            processorDirectory.Trim().Trim('"'));
+
+        string[] projects = Directory.GetFiles(
+            directory,
+            "*.csproj",
+            SearchOption.TopDirectoryOnly);
+
+        if (projects.Length != 1)
+        {
+            throw new CustomBasicException(
+                $"Expected one processor project in '{directory}', " +
+                $"but found {projects.Length}.");
+        }
+
+        // Inspect the processor, not the app being configured.
+        CsProjEditor processorEditor = new(projects[0]);
+
+        string netVersion = bb1.Configuration!.NetVersion;
+
+        string framework = processorEditor.IsWindows()
+            ? $"net{netVersion}.0-windows10.0.17763.0"
+            : $"net{netVersion}.0";
+
+        XDocument processorDocument = XDocument.Load(projects[0]);
+
+        XElement processorRoot = processorDocument.Root
+            ?? throw new CustomBasicException(
+                "Processor project has no root.");
+
+        XNamespace processorNs = processorRoot.Name.Namespace;
+
+        string assemblyName = processorRoot
+            .Elements(processorNs + "PropertyGroup")
+            .Elements(processorNs + "AssemblyName")
+            .Select(x => x.Value.Trim())
+            .LastOrDefault(x => !string.IsNullOrWhiteSpace(x))
+            ?? Path.GetFileNameWithoutExtension(projects[0]);
+
+        if (assemblyName.Contains("$("))
+        {
+            throw new CustomBasicException(
+                $"Cannot resolve processor AssemblyName '{assemblyName}'.");
+        }
+
+        string executable = Path.Combine(
+            directory,
+            "bin",
+            "Release",
+            framework,
+            $"{assemblyName}.exe");
+
+        // The processor need not be built yet.
+        // Missing executables are skipped when the app builds.
+        string condition =
+            "'$(Configuration)' == 'Release' " +
+            "and '$(DesignTimeBuild)' != 'true' " +
+            "and '$(IsCrossTargetingBuild)' != 'true' " +
+            "and '$(SkipAppPostBuild)' != 'true' " +
+            $"and Exists('{executable.Replace("'", "%27")}')";
+
+        // Dots prevent quoted directory arguments ending in a backslash.
+        string command =
+            $"\"{executable}\" " +
+            "\"$(MSBuildProjectName)\" " +
+            "\"$(MSBuildProjectDirectory)\\.\" " +
+            "\"$(MSBuildProjectFile)\" " +
+            "\"$(TargetDir).\"";
+
+        XNamespace ns = _csProjDoc.Root!.Name.Namespace;
+
+        return new XElement(ns + "Target",
+            new XAttribute("Name", "RunConfiguredAppPostBuild"),
+            new XAttribute("AfterTargets", "Build"),
+            new XAttribute("Condition", condition),
+            new XElement(ns + "Exec",
+                new XAttribute("Command", command)));
+    }
+
+
     public bool AddFeedType(EnumFeedType feedType)
     {
         // Check if we can get the root element of the XML

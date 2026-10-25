@@ -5,6 +5,8 @@ public class AppModel
     public string ShortcutName { get; set; } = "";
     //this is used if someone on your network uses the app.
     public string NetworkedPath { get; set; } = "";
+    //some apps has a post build process.   if populated, then can be used to populate the post build app.
+    public string PostBuildApp { get; set; } = "";
     public string CsProj { get; set; } = "";
     public bool WindowsWPFBlazor { get; set; }
     public string Category { get; set; } = ""; //this is used so i can specify to update only a category of apps.

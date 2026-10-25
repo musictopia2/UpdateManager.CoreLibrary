@@ -39,6 +39,7 @@ public class FileAppsContext : IAppsContext
         update.NetworkedPath = app.NetworkedPath;
         update.ShortcutName = app.ShortcutName;
         update.Deleted = app.Deleted;
+        update.PostBuildApp = app.PostBuildApp;
         //i think updating should be just these 3.
         await SaveAsync();
     }
