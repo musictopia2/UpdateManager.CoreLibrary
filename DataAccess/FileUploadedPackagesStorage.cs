@@ -16,10 +16,7 @@ public class FileUploadedPackagesStorage : IUploadedPackagesStorage
         {
             _list.RemoveSpecificItem(packageToRemove);
             await SaveAsync();
-            if (AfterSaveAsync is { } afterSave)
-            {
-                await afterSave(_uploadedPath);
-            }
+            
         }
         else
         {
@@ -32,6 +29,10 @@ public class FileUploadedPackagesStorage : IUploadedPackagesStorage
         {
 
             await jj1.SaveObjectAsync(_uploadedPath, _list);
+            if (AfterSaveAsync is { } afterSave)
+            {
+                await afterSave(_uploadedPath);
+            }
         }
         catch (Exception ex)
         {
