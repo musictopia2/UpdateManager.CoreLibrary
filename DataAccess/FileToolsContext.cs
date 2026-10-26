@@ -3,10 +3,20 @@ public class FileToolsContext : IToolsContext
 {
     readonly string _packagePath = bb1.Configuration!.RequiredNuGetToolPath;
     private BasicList<NuGetToolModel> _list = [];
+    public static Func<string, Task>? AfterSaveAsync { get; set; }
+    private async Task SaveAsync()
+    {
+        await jj1.SaveObjectAsync(_packagePath, _list);
+        if (AfterSaveAsync is { } afterSave)
+        {
+            await afterSave(_packagePath);
+        }
+    }
+
     async Task IToolsContext.AddToolAsync(NuGetToolModel tool)
     {
         _list.Add(tool);
-        await jj1.SaveObjectAsync(_packagePath, _list);
+        await SaveAsync();
     }
     async Task<BasicList<NuGetToolModel>> IToolsContext.GetToolsAsync()
     {
@@ -20,7 +30,8 @@ public class FileToolsContext : IToolsContext
     }
     async Task IToolsContext.SaveCompleteListAsync(BasicList<NuGetToolModel> packages)
     {
-        await jj1.SaveObjectAsync(_packagePath, packages);
+        _list = packages;
+        await SaveAsync();
     }
     async Task IToolsContext.UpdateToolAsync(NuGetToolModel updatedTool)
     {
@@ -30,8 +41,7 @@ public class FileToolsContext : IToolsContext
         tool.Version = updatedTool.Version;
         tool.NugetPackagePath = updatedTool.NugetPackagePath;
         tool.IsExcluded = updatedTool.IsExcluded;
-        // Save the updated list back to the file
-        await jj1.SaveObjectAsync(_packagePath, _list);
+        await SaveAsync();
     }
     async Task IToolsContext.UpdateToolVersionAsync(string toolName, string version)
     {
@@ -42,6 +52,6 @@ public class FileToolsContext : IToolsContext
         var package = _list.SingleOrDefault(x => x.PackageName == toolName)
             ?? throw new InvalidOperationException($"Tool '{toolName}' not found.");
         package.Version = version; // Update the version.
-        await jj1.SaveObjectAsync(_packagePath, _list); // Save the updated list.
+        await SaveAsync();
     }
 }
