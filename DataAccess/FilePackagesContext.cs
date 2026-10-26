@@ -1,8 +1,7 @@
-﻿using System.Text;
-
-namespace UpdateManager.CoreLibrary.DataAccess;
+﻿namespace UpdateManager.CoreLibrary.DataAccess;
 public class FilePackagesContext : IPackagesContext
 {
+    public static Func<string, Task>? AfterSaveAsync { get; set; }
     readonly string _packagePath = bb1.Configuration!.RequiredNuGetPackagesPath;
     private BasicList<NuGetPackageModel> _list = [];
     async Task IPackagesContext.AddPackageAsync(NuGetPackageModel package)
@@ -23,6 +22,10 @@ public class FilePackagesContext : IPackagesContext
     async Task IPackagesContext.SaveCompleteListAsync(BasicList<NuGetPackageModel> packages)
     {
         await jj1.SaveObjectAsync(_packagePath, packages);
+        if (AfterSaveAsync is { } afterSave)
+        {
+            await afterSave(_packagePath);
+        }
     }
     async Task IPackagesContext.UpdatePackageAsync(NuGetPackageModel updatedPackage)
     {
