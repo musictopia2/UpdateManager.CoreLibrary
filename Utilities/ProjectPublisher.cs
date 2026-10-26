@@ -9,7 +9,7 @@ public static class ProjectPublisher
             var processStartInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"publish \"{csprojFilePath}\"  --configuration Release --runtime win-x64 --output bin/Release/Publish --self-contained true /p:PublishSingleFile=true",
+                Arguments = $"publish \"{csprojFilePath}\" --configuration Release --runtime win-x64 --output bin/Release/Publish --self-contained true /p:PublishSingleFile=true /p:SkipAppPostBuild=true",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
