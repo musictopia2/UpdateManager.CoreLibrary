@@ -21,12 +21,20 @@ public class FilePackagesContext : IPackagesContext
     }
     async Task IPackagesContext.SaveCompleteListAsync(BasicList<NuGetPackageModel> packages)
     {
-        await jj1.SaveObjectAsync(_packagePath, packages);
+        _list = packages;
+        await SaveAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        await jj1.SaveObjectAsync(_packagePath, _list);
         if (AfterSaveAsync is { } afterSave)
         {
             await afterSave(_packagePath);
         }
     }
+
+
     async Task IPackagesContext.UpdatePackageAsync(NuGetPackageModel updatedPackage)
     {
         var package = _list.SingleOrDefault(x => x.PackageName == updatedPackage.PackageName)
@@ -37,8 +45,7 @@ public class FilePackagesContext : IPackagesContext
         package.NugetPackagePath = updatedPackage.NugetPackagePath;
         package.IsExcluded = updatedPackage.IsExcluded;
         package.RequiredBy = updatedPackage.RequiredBy;
-        // Save the updated list back to the file
-        await jj1.SaveObjectAsync(_packagePath, _list);
+        await SaveAsync();
     }
 
     async Task IPackagesContext.UpdatePackageVersionAsync(string packageName, string version)
@@ -50,6 +57,6 @@ public class FilePackagesContext : IPackagesContext
         var package = _list.SingleOrDefault(x => x.PackageName == packageName)
             ?? throw new InvalidOperationException($"Package '{packageName}' not found.");
         package.Version = version; // Update the version.
-        await jj1.SaveObjectAsync(_packagePath, _list); // Save the updated list.
+        await SaveAsync();
     }
 }

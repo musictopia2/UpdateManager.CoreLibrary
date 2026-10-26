@@ -3,6 +3,7 @@ public class FileUploadedPackagesStorage : IUploadedPackagesStorage
 {
     private BasicList<UploadedPackageModel> _list = [];
     private readonly string _uploadedPath = bb1.Configuration!.UploadedPackagesStoragePathFromConfig;
+    public static Func<string, Task>? AfterSaveAsync { get; set; }
     async Task IUploadedPackagesStorage.AddUploadedPackageAsync(UploadedPackageModel package)
     {
         _list.Add(package);
@@ -15,6 +16,10 @@ public class FileUploadedPackagesStorage : IUploadedPackagesStorage
         {
             _list.RemoveSpecificItem(packageToRemove);
             await SaveAsync();
+            if (AfterSaveAsync is { } afterSave)
+            {
+                await afterSave(_uploadedPath);
+            }
         }
         else
         {
@@ -25,6 +30,7 @@ public class FileUploadedPackagesStorage : IUploadedPackagesStorage
     {
         try
         {
+
             await jj1.SaveObjectAsync(_uploadedPath, _list);
         }
         catch (Exception ex)
