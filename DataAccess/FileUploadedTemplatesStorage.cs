@@ -3,11 +3,16 @@ public class FileUploadedTemplatesStorage : IUploadedTemplatesStorage
 {
     private BasicList<UploadTemplateModel> _list = [];
     private readonly string _uploadedPath = bb1.Configuration!.UploadedTemplatesStoragePathFromConfig;
+    public static Func<string, Task>? AfterSaveAsync { get; set; }
     private async Task SaveAsync()
     {
         try
         {
             await jj1.SaveObjectAsync(_uploadedPath, _list);
+            if (AfterSaveAsync is { } afterSave)
+            {
+                await afterSave(_uploadedPath);
+            }
         }
         catch (Exception ex)
         {

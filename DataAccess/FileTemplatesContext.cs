@@ -3,12 +3,20 @@ public class FileTemplatesContext : ITemplatesContext
 {
     readonly string _packagePath = bb1.Configuration!.RequiredNuGetTemplatePath;
     private BasicList<NuGetTemplateModel> _list = [];
+    public static Func<string, Task>? AfterSaveAsync { get; set; }
     async Task ITemplatesContext.AddTemplateAsync(NuGetTemplateModel template)
     {
         _list.Add(template);
-        await jj1.SaveObjectAsync(_packagePath, _list);
+        await SaveAsync();
     }
-
+    private async Task SaveAsync()
+    {
+        await jj1.SaveObjectAsync(_packagePath, _list);
+        if (AfterSaveAsync is { } afterSave)
+        {
+            await afterSave(_packagePath);
+        }
+    }
     async Task<BasicList<NuGetTemplateModel>> ITemplatesContext.GetTemplatesAsync()
     {
         _list.Clear();
@@ -21,7 +29,8 @@ public class FileTemplatesContext : ITemplatesContext
     }
     async Task ITemplatesContext.SaveCompleteListAsync(BasicList<NuGetTemplateModel> templates)
     {
-        await jj1.SaveObjectAsync(_packagePath, templates);
+        _list = templates;
+        await SaveAsync();
     }
     async Task ITemplatesContext.UpdateTemplateAsync(NuGetTemplateModel updatedTemplate)
     {
@@ -32,15 +41,15 @@ public class FileTemplatesContext : ITemplatesContext
         template.NugetPackagePath = updatedTemplate.NugetPackagePath;
         template.IsExcluded = updatedTemplate.IsExcluded;
         // Save the updated list back to the file
-        await jj1.SaveObjectAsync(_packagePath, _list);
+        await SaveAsync();
     }
 
-    Task ITemplatesContext.UpdateTemplateStampAsync(string templateName)
+    async Task ITemplatesContext.UpdateTemplateStampAsync(string templateName)
     {
         var package = _list.SingleOrDefault(x => x.PackageName == templateName)
             ?? throw new InvalidOperationException($"Template '{templateName}' not found.");
         package.LastUpdated = DateTime.Now; // Update the timestamp.
-        return jj1.SaveObjectAsync(_packagePath, _list); // Save the updated list.
+        await SaveAsync();
     }
 
     async Task ITemplatesContext.UpdateTemplateVersionAsync(string templateName, string version)
@@ -52,6 +61,6 @@ public class FileTemplatesContext : ITemplatesContext
         var package = _list.SingleOrDefault(x => x.PackageName == templateName)
             ?? throw new InvalidOperationException($"Template '{templateName}' not found.");
         package.Version = version; // Update the version.
-        await jj1.SaveObjectAsync(_packagePath, _list); // Save the updated list.
+        await SaveAsync();
     }
 }
