@@ -1,5 +1,5 @@
 ﻿namespace UpdateManager.CoreLibrary.Models;
-public class ScheduledTaskModel
+public class ScheduledTaskOriginalStateModel
 {
     public string TaskName { get; set; } = "";
     public string TaskPath { get; set; } = "";
