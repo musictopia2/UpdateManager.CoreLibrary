@@ -5,4 +5,5 @@ public class ScheduledTaskOriginalStateModel
     public string TaskPath { get; set; } = "";
     public bool Enabled { get; set; }
     public string State { get; set; } = "";
+    public int RunningInstanceCount { get; set; }
 }

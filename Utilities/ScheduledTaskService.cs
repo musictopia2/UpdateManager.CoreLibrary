@@ -99,13 +99,19 @@ public class ScheduledTaskService : IScheduledTaskService
                         throw 'The task enabled setting did not match the requested value.'
                     }
                 }
+                $scheduler = New-Object -ComObject 'Schedule.Service'
+                $scheduler.Connect()
 
+                $folder = $scheduler.GetFolder([string]$request.TaskPath)
+                $registeredTask = $folder.GetTask([string]$request.TaskName)
+                $runningInstances = $registeredTask.GetInstances(0)
                 [pscustomobject]@{
                     TaskName = [string]$task.TaskName
                     TaskPath = [string]$task.TaskPath
                     Enabled = [bool]$task.Settings.Enabled
                     State = $task.State.ToString()
-                } | ConvertTo-Json -Compress
+                    RunningInstanceCount = [int]$runningInstances.Count
+            } | ConvertTo-Json -Compress
 
                 exit 0
             }
