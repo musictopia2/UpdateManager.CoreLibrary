@@ -29,6 +29,7 @@ public static class UpdateSystemConfigurationKeys
     public static string UploadedToolsStoragePathKey => "UploadedtoolsStoragePathKey";
     public static string UploadedTemplatesStoragePathKey => "UploadedTemplatesStoragePathKey";
 
+    public static string StaticSiteInfoKey => "StaticSiteInfoKey";
 
 
 }

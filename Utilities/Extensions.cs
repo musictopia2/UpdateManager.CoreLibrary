@@ -256,6 +256,24 @@ public static class Extensions
                 return value;
             }
         }
+
+        public string RequiredStaticSitesPath
+        {
+            get
+            {
+                var value =
+                    configuration[UpdateSystemConfigurationKeys.StaticSiteInfoKey];
+
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ConfigurationKeyNotFoundException(
+                        "The static-site inventory path is not registered in the configuration.");
+                }
+
+                return value;
+            }
+        }
+
     }
     extension (string version)
     {
