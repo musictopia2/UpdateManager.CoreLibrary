@@ -13,7 +13,9 @@ public static class NuGetPackageChecker
             HttpResponseMessage response = await _client.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error: Failed to query NuGet. Status Code: {response.StatusCode}");
+                Console.WriteLine(
+                    $"Error: Failed to query NuGet for '{packageName}'. " +
+                    $"Status Code: {response.StatusCode}. URL: {url}");
                 return null!;
             }
 
