@@ -83,7 +83,11 @@ public class FileStaticSitesContext : IStaticSitesContext
         existing.DisplayName = site.DisplayName;
         existing.Version = site.Version;
         existing.Disabled = site.Disabled;
-
+        existing.HostUpdatePending = site.HostUpdatePending;
+        existing.LastSubmittedCommit = site.LastSubmittedCommit;
+        existing.SourceUpdatePending = site.SourceUpdatePending;
+        existing.DeploymentBuildPending = site.DeploymentBuildPending;
+        existing.RenderCacheClearPending = site.RenderCacheClearPending;
         await SaveAsync();
     }
 
