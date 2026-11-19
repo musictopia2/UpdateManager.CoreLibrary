@@ -88,6 +88,7 @@ public class FileStaticSitesContext : IStaticSitesContext
         existing.SourceUpdatePending = site.SourceUpdatePending;
         existing.DeploymentBuildPending = site.DeploymentBuildPending;
         existing.HostCleanupPending = site.HostCleanupPending;
+        existing.RegisteredSourceFingerprint = site.RegisteredSourceFingerprint;
         existing.LastDeployedSourceFingerprint = site.LastDeployedSourceFingerprint;
         await SaveAsync();
     }

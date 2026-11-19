@@ -29,5 +29,6 @@ public class StaticSiteModel
     public bool DeploymentBuildPending { get; set; }
 
     public bool HostCleanupPending { get; set; }
+    public string RegisteredSourceFingerprint { get; set; } = "";
     public string LastDeployedSourceFingerprint { get; set; } = "";
 }
