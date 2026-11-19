@@ -28,6 +28,6 @@ public class StaticSiteModel
     // still needs to be requested.
     public bool DeploymentBuildPending { get; set; }
 
-    public bool RenderCacheClearPending { get; set; }
-
+    public bool HostCleanupPending { get; set; }
+    public string LastDeployedSourceFingerprint { get; set; } = "";
 }

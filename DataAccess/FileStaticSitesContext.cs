@@ -87,7 +87,8 @@ public class FileStaticSitesContext : IStaticSitesContext
         existing.LastSubmittedCommit = site.LastSubmittedCommit;
         existing.SourceUpdatePending = site.SourceUpdatePending;
         existing.DeploymentBuildPending = site.DeploymentBuildPending;
-        existing.RenderCacheClearPending = site.RenderCacheClearPending;
+        existing.HostCleanupPending = site.HostCleanupPending;
+        existing.LastDeployedSourceFingerprint = site.LastDeployedSourceFingerprint;
         await SaveAsync();
     }
 
