@@ -1,122 +1,123 @@
+using System.Text.Json;
+
 namespace UpdateManager.CoreLibrary.Utilities;
+
 public static class ProjectPublisher
 {
-    // .NET 11 WPF loads these mixed-mode dependencies from disk (dotnet/wpf#11842).
-    private const string WpfPublishTargets = """
-        <Project>
-          <Target Name="KeepNet11WpfRuntimeFilesOutsideBundle"
-                  AfterTargets="ComputeResolvedFilesToPublishList"
-                  Condition="'$(UseWPF)' == 'true' And '$(TargetFrameworkVersion)' == 'v11.0'
-                             And '$(PublishSingleFile)' == 'true' And '$(SelfContained)' == 'true'">
-            <ItemGroup>
-              <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
-                                     Condition="'%(Filename)%(Extension)' == 'DirectWriteForwarder.dll'
-                                             Or '%(Filename)%(Extension)' == 'System.Printing.dll'
-                                             Or '%(Filename)%(Extension)' == 'ijwhost.dll'"
-                                     ExcludeFromSingleFile="true" />
-            </ItemGroup>
-          </Target>
-        </Project>
-        """;
-
-    public static async Task<bool> PublishProjectWindowsSelfContainedAsync(string csprojFilePath, CancellationToken cancellationToken = default)
+    public static async Task<bool> PublishProjectWindowsSelfContainedAsync(
+        string csprojFilePath, CancellationToken cancellationToken = default)
     {
-        string? targetsPath = null;
         try
         {
-            targetsPath = Path.GetTempFileName();
-            await File.WriteAllTextAsync(targetsPath, WpfPublishTargets, cancellationToken);
-
             string workingDirectory = Path.GetDirectoryName(csprojFilePath)!;
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                WorkingDirectory = workingDirectory,
-                CreateNoWindow = true
-            };
+            string[] projectProperties =
+            [
+                "-p:Configuration=Release",
+                "-p:RuntimeIdentifier=win-x64",
+                "-p:SelfContained=true",
+                "-p:SkipAppPostBuild=true"
+            ];
 
-            foreach (string argument in new[]
-            {
-                "publish", csprojFilePath, "--configuration", "Release",
-                "--runtime", "win-x64", "--output", "bin/Release/Publish",
-                "--self-contained", "true", "/p:PublishSingleFile=true",
-                "/p:SkipAppPostBuild=true",
-                $"/p:CustomAfterMicrosoftCommonTargets={targetsPath}"
-            })
-            {
-                processStartInfo.ArgumentList.Add(argument);
-            }
+            var (evaluationExitCode, propertiesJson, evaluationErrors) = await RunDotNetAsync(
+                workingDirectory,
+                ["msbuild", csprojFilePath, "-nologo", .. projectProperties,
+                    "-getProperty:UseWPF,TargetFrameworkVersion"],
+                cancellationToken);
 
-            using var process = Process.Start(processStartInfo);
-            if (process == null)
+            if (evaluationExitCode != 0)
             {
-                Console.WriteLine("Failed to start the publish process.");
+                Console.WriteLine($"Could not determine the publish format:{Environment.NewLine}{propertiesJson}{evaluationErrors}");
                 return false;
             }
 
-            // Read and display the output and errors for diagnostics
-            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            using var evaluation = JsonDocument.Parse(propertiesJson);
+            JsonElement properties = evaluation.RootElement.GetProperty("Properties");
 
-            // Wait for the process to exit and check for cancellation
-            var exitTask = process.WaitForExitAsync(cancellationToken);
-            await Task.WhenAny(outputTask, errorTask, exitTask); // Wait for any task to complete
+            // WPF mixed-mode assemblies can fail to load from a .NET 11 single-file bundle.
+            // https://github.com/dotnet/wpf/issues/11842
+            bool useFolderPublish =
+                string.Equals(properties.GetProperty("UseWPF").GetString(), "true",
+                    StringComparison.OrdinalIgnoreCase) &&
+                properties.GetProperty("TargetFrameworkVersion").GetString() == "v11.0";
 
-            if (cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    process.Kill(); // Kill the process on cancellation
-                    await process.WaitForExitAsync();
-                }
-                catch (Exception killEx)
-                {
-                    Console.WriteLine($"Error killing the process: {killEx.Message}");
-                }
+            string publishMode = useFolderPublish ? "folder" : "single file";
+            Console.WriteLine($"Publish mode: self-contained {publishMode} (win-x64).");
 
-                Console.WriteLine("Publish process was canceled.");
-                return false;
-            }
-            string output = await outputTask;
-            string errors = await errorTask;
+            var (exitCode, output, errors) = await RunDotNetAsync(
+                workingDirectory,
+                ["publish", csprojFilePath, .. projectProperties, "--output", "bin/Release/Publish",
+                    useFolderPublish ? "-p:PublishSingleFile=false" : "-p:PublishSingleFile=true"],
+                cancellationToken);
 
-            // Log errors if any
             if (!string.IsNullOrEmpty(errors))
             {
                 Console.WriteLine($"Publish Errors: {errors}");
             }
-            // Wait for the process to fully exit
-            await exitTask;
 
-            // Return true if the build process was successful, false otherwise
-            bool success = process.ExitCode == 0;
-            if (!success)
+            if (exitCode != 0)
             {
                 Console.WriteLine($"Publish output: {output}");
             }
-            return success;
+
+            return exitCode == 0;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            Console.WriteLine("Publish process was canceled.");
+            return false;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred while publishing the project: {ex.Message}");
             return false;
         }
-        finally
+    }
+
+    private static async Task<(int ExitCode, string Output, string Errors)> RunDotNetAsync(
+        string workingDirectory, string[] arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var startInfo = new ProcessStartInfo
         {
-            if (targetsPath is not null)
+            FileName = "dotnet",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            WorkingDirectory = workingDirectory,
+            CreateNoWindow = true
+        };
+
+        foreach (string argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException("Failed to start dotnet.");
+
+        Task<string> outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        Task<string> errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+            return (process.ExitCode, await outputTask, await errorTask);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            if (!process.HasExited)
             {
                 try
                 {
-                    File.Delete(targetsPath);
+                    process.Kill(entireProcessTree: true);
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                catch (InvalidOperationException) when (process.HasExited)
                 {
-                    Console.WriteLine($"Could not remove temporary publish targets: {ex.Message}");
                 }
             }
+
+            throw;
         }
     }
 }
